@@ -1,0 +1,2 @@
+defmodule Bureaucrat do
+end
