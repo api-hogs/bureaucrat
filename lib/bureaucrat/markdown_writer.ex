@@ -13,7 +13,7 @@ defmodule Bureaucrat.MarkdownWriter do
     Enum.each(records, fn {controller, actions} ->
       puts(file, "* [#{controller}](##{controller})")
       Enum.each(actions, fn {action, _} ->
-        puts(file, "  * [#{action}](##{controller}-#{action})")
+        puts(file, "  * [#{action}](##{controller}#{action})")
       end)
     end)
   end
