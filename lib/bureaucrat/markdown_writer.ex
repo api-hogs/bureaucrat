@@ -6,7 +6,6 @@ defmodule Bureaucrat.MarkdownWriter do
     Enum.each(records, fn {controller, records} ->
       write_controller(controller, records, file)
     end)
-    IO.inspect(file, records, [])
   end
 
   defp write_controller(controller, records, file) do
@@ -22,22 +21,39 @@ defmodule Bureaucrat.MarkdownWriter do
   end
 
   defp write_example(record, file) do
+    path = case record.query_string do
+      "" -> record.request_path
+      str -> "#{record.request_path}?#{str}"
+    end
+
     file
-    |> puts( "#{record.method} #{record.request_path}?#{record.query_string}")
-    |> puts( "#{record.status}")
-    |> puts( "```json")
-    |> puts( "#{format_json(record.resp_body)}")
-    |> puts( "```")
-    # body_params
-    # params
-    # req_headers
+    |> puts("* __Method:__ #{record.method}")
+    |> puts("* __Path:__ #{path}")
+
+    # TODO maybe show req_headers
+
+    unless record.body_params == %{} do
+      file
+      |> puts("* __Request body:__")
+      |> puts("```json")
+      |> puts("#{format_body_params(record.body_params)}")
+      |> puts("```")
+    end
+
+    file
+    |> puts("* __Status__: #{record.status}")
+    |> puts("* __Response body:__")
+    |> puts("```json")
+    |> puts("#{format_resp_body(record.resp_body)}")
+    |> puts("```")
   end
 
-  defp format_headers(headers) do
-
+  def format_body_params(params) do
+    {:ok, json} = Poison.encode(params, pretty: true)
+    json
   end
 
-  defp format_json(string) do
+  defp format_resp_body(string) do
     {:ok, struct} = Poison.decode(string)
     {:ok, json} = Poison.encode(struct, pretty: true)
     json
