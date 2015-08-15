@@ -2,21 +2,31 @@ defmodule Bureaucrat.MarkdownWriter do
   def write_docs(records) do
     {:ok, file} = File.open "api_documentation.md", [:write]
     records = group_records(records)
-    puts file, "# API Documentation"
+    puts(file, "# API Documentation")
+    write_table_of_contents(records, file)
     Enum.each(records, fn {controller, records} ->
       write_controller(controller, records, file)
     end)
   end
 
+  defp write_table_of_contents(records, file) do
+    Enum.each(records, fn {controller, actions} ->
+      puts(file, "* [#{controller}](##{controller})")
+      Enum.each(actions, fn {action, _} ->
+        puts(file, "  * [#{action}](##{controller}-#{action})")
+      end)
+    end)
+  end
+
   defp write_controller(controller, records, file) do
-    puts file, "## " <> to_string(controller)
+    puts(file, "## #{to_string(controller)}")
     Enum.each(records, fn {action, records} ->
       write_action(action, records, file)
     end)
   end
 
   defp write_action(action, records, file) do
-    puts file, "### " <> to_string(action)
+    puts(file, "### " <> to_string(action))
     Enum.each(records, &(write_example(&1, file)))
   end
 
