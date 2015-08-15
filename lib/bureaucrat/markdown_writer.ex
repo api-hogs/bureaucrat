@@ -1,6 +1,6 @@
 defmodule Bureaucrat.MarkdownWriter do
   def write_docs(records) do
-    {:ok, file} = File.open "/tmp/doc.md", [:write]
+    {:ok, file} = File.open "api_documentation.md", [:write]
     records = group_records(records)
     puts file, "# API Documentation"
     Enum.each(records, fn {controller, records} ->
