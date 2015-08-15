@@ -16,6 +16,7 @@ defmodule Bureaucrat.MarkdownWriter do
         puts(file, "  * [#{action}](##{controller}#{action})")
       end)
     end)
+    puts(file, "")
   end
 
   defp write_controller(controller, records, file) do
