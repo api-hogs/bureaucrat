@@ -11,9 +11,11 @@ defmodule Bureaucrat.MarkdownWriter do
 
   defp write_table_of_contents(records, file) do
     Enum.each(records, fn {controller, actions} ->
-      puts(file, "* [#{controller}](##{controller})")
+      anchor = to_anchor(controller)
+      puts(file, "* [#{controller}](##{anchor})")
       Enum.each(actions, fn {action, _} ->
-        puts(file, "  * [#{action}](##{controller}#{action})")
+        anchor = to_anchor("#{controller}.#{action}")
+        puts(file, "  * [#{action}](##{anchor})")
       end)
     end)
     puts(file, "")
@@ -22,12 +24,12 @@ defmodule Bureaucrat.MarkdownWriter do
   defp write_controller(controller, records, file) do
     puts(file, "## #{to_string(controller)}")
     Enum.each(records, fn {action, records} ->
-      write_action(action, records, file)
+      write_action(action, controller, records, file)
     end)
   end
 
-  defp write_action(action, records, file) do
-    puts(file, "### " <> to_string(action))
+  defp write_action(action, controller, records, file) do
+    puts(file, "### #{controller}.#{action}")
     Enum.each(records, &(write_example(&1, file)))
   end
 
@@ -75,8 +77,21 @@ defmodule Bureaucrat.MarkdownWriter do
     file
   end
 
+  defp strip_ns(module) do
+    case to_string(module) do
+      "Elixir." <> rest -> rest
+      other -> other
+    end
+  end
+
+  defp to_anchor(name) do
+    name
+    |> String.downcase
+    |> String.replace(".", "")
+  end
+
   defp group_records(records) do
-    by_controller = Enum.group_by(records, &(&1.private.phoenix_controller))
+    by_controller = Enum.group_by(records, &(strip_ns(&1.private.phoenix_controller)))
     Enum.map(by_controller, fn {c, recs} ->
       {c, Enum.group_by(recs, &(&1.private.phoenix_action))}
     end)
