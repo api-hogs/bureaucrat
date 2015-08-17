@@ -1,10 +1,25 @@
 defmodule Bureaucrat do
-  def start do
-    {:ok, _} = Bureaucrat.Recorder.start_link
+  use Application
+
+  def start(_type, []) do
+    import Supervisor.Spec
+
+    children = [
+      worker(Bureaucrat.Recorder, []),
+    ]
+
+    opts = [strategy: :one_for_one, name: Bureaucrat.Supervisor]
+    Supervisor.start_link(children, opts)
   end
 
-  def doc(conn, desc \\ nil) do
-    Bureaucrat.Recorder.doc(conn, desc)
-    conn
+  def start(options \\ []) do
+    configure(options)
+    {:ok, _} = start(:normal, [])
+  end
+
+  def configure(options) do
+    Enum.each options, fn {k, v} ->
+      Application.put_env(:bureaucrat, k, v)
+    end
   end
 end

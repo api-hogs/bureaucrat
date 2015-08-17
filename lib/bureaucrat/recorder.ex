@@ -1,18 +1,16 @@
 defmodule Bureaucrat.Recorder do
   use GenServer
 
-  @server __MODULE__
-
   def start_link do
-    {:ok, _} = GenServer.start_link(__MODULE__, [], name: @server)
+    {:ok, _} = GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   def doc(conn, desc) do
-    GenServer.cast(@server, {:doc, conn, desc})
+    GenServer.cast(__MODULE__, {:doc, conn, desc})
   end
 
   def write_docs do
-    GenServer.call(@server, :write_docs)
+    GenServer.call(__MODULE__, :write_docs)
   end
 
   def init([]) do
