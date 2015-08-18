@@ -1,6 +1,6 @@
 defmodule Bureaucrat.MarkdownWriter do
-  def write_docs(records) do
-    {:ok, file} = File.open "api_documentation.md", [:write]
+  def write(records, path) do
+    {:ok, file} = File.open path, [:write]
     records = group_records(records)
     puts(file, "# API Documentation")
     write_table_of_contents(records, file)

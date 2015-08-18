@@ -13,11 +13,12 @@ defmodule Bureaucrat do
   end
 
   def start(options \\ []) do
+    Application.start(:bureaucrat)
     configure(options)
-    {:ok, _} = start(:normal, [])
+    :ok
   end
 
-  def configure(options) do
+  defp configure(options) do
     Enum.each options, fn {k, v} ->
       Application.put_env(:bureaucrat, k, v)
     end

@@ -9,8 +9,8 @@ defmodule Bureaucrat.Recorder do
     GenServer.cast(__MODULE__, {:doc, conn, desc})
   end
 
-  def write_docs do
-    GenServer.call(__MODULE__, :write_docs)
+  def get_records do
+    GenServer.call(__MODULE__, :get_records)
   end
 
   def init([]) do
@@ -22,8 +22,7 @@ defmodule Bureaucrat.Recorder do
     {:noreply, [conn | records]}
   end
 
-  def handle_call(:write_docs, _from, records) do
-    Bureaucrat.MarkdownWriter.write_docs(records)
-    {:reply, :ok, records}
+  def handle_call(:get_records, _from, records) do
+    {:reply, records, records}
   end
 end
