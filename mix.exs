@@ -3,11 +3,11 @@ defmodule Bureaucrat.Mixfile do
 
   def project do
     [app: :bureaucrat,
-     version: "0.0.4",
+     version: "0.1.0",
      elixir: "~> 1.0",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps]
+     description: "Generate Phoenix API documentation from tests"
+     deps: deps,
+     package: package]
   end
 
   # Configuration for the OTP application
@@ -28,6 +28,15 @@ defmodule Bureaucrat.Mixfile do
     [
      {:plug, "~> 0.14 or ~> 1.0"},
      {:poison, github: "devinus/poison", branch: "master"}
+    ]
+  end
+
+  defp package do
+    [
+      files: ~w(lib mix.exs README.md UNLICENSE),
+      contributors: ["Roman Kuznietsov"],
+      licenses: ["Unlicense"],
+      links: %{"GitHub" => "https://github.com/api-hogs/bureaucrat"}
     ]
   end
 end
