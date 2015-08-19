@@ -5,7 +5,7 @@ defmodule Bureaucrat.Mixfile do
     [app: :bureaucrat,
      version: "0.1.0",
      elixir: "~> 1.0",
-     description: "Generate Phoenix API documentation from tests"
+     description: "Generate Phoenix API documentation from tests",
      deps: deps,
      package: package]
   end
