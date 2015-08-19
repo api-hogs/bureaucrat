@@ -46,3 +46,19 @@ end
 Usage
 -----
 
+Bureaucrat collects data from connection structs used in tests.
+To generate docs from a connection, pass it to `doc/1` funciton:
+
+```elixir
+test "GET /api/v1/products" do
+  conn = conn()
+      |> get("/api/v1/products")
+      |> doc
+  assert conn.status == 200
+end
+```
+
+Then, run the tests. At the end of the test suite, Bureaucrat will generate
+the documentation file(s) from all of the captured connections.
+
+The default output file is `web/controllers/README.md`.
