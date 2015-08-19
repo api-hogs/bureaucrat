@@ -19,7 +19,8 @@ defmodule Bureaucrat.Mixfile do
       env: [
         writer: Bureaucrat.MarkdownWriter,
         default_path: "web/controllers/README.md",
-        paths: []
+        paths: [],
+        env_var: "DOC"
       ]]
   end
 

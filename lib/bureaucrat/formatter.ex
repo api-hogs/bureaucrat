@@ -6,17 +6,22 @@ defmodule Bureaucrat.Formatter do
   end
 
   def handle_event({:suite_finished, _run_us, _load_us}, nil) do
+    env_var = Application.get_env(:bureaucrat, :env_var)
+    if System.get_env(env_var), do: generate_docs
+    :remove_handler
+  end
+
+  def handle_event(_event, nil) do
+    {:ok, nil}
+  end
+
+  defp generate_docs do
     records = Bureaucrat.Recorder.get_records
     writer = Application.get_env(:bureaucrat, :writer)
     grouped = group_by_path(records)
     Enum.map(grouped, fn {path, recs} ->
       apply(writer, :write, [recs, path])
     end)
-    :remove_handler
-  end
-
-  def handle_event(_event, nil) do
-    {:ok, nil}
   end
 
   defp group_by_path(records) do
