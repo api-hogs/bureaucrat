@@ -1,0 +1,2 @@
+%{"plug": {:hex, :plug, "1.0.0"},
+  "poison": {:git, "git://github.com/devinus/poison.git", "53de16a8dcb67d896d1d2b8ea91b9d506b8d83f4", [branch: "master"]}}
