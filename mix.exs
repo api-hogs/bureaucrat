@@ -3,7 +3,7 @@ defmodule Bureaucrat.Mixfile do
 
   def project do
     [app: :bureaucrat,
-     version: "0.1.0",
+     version: "0.1.1",
      elixir: "~> 1.0",
      description: "Generate Phoenix API documentation from tests",
      deps: deps,
