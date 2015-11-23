@@ -34,7 +34,7 @@ defmodule Bureaucrat.Mixfile do
   defp package do
     [
       files: ~w(lib mix.exs README.md UNLICENSE),
-      contributors: ["Roman Kuznietsov"],
+      maintainers: ["Roman Kuznietsov"],
       licenses: ["Unlicense"],
       links: %{"GitHub" => "https://github.com/api-hogs/bureaucrat"}
     ]
