@@ -17,8 +17,12 @@ defmodule Bureaucrat.Formatter do
 
   defp generate_docs do
     records = Bureaucrat.Recorder.get_records
-    writer = Application.get_env(:bureaucrat, :writer)
-    grouped = group_by_path(records)
+    writer  = Application.get_env(:bureaucrat, :writer)
+    grouped =
+      records
+      |> Enum.sort_by(&(-1 * &1.assigns.bureaucrat_line))
+      |> group_by_path
+
     Enum.map(grouped, fn {path, recs} ->
       apply(writer, :write, [recs, path])
     end)

@@ -40,6 +40,7 @@ defmodule Bureaucrat.MarkdownWriter do
     end
 
     file
+    |> puts("### #{record.assigns.bureaucrat_desc}")
     |> puts("* __Method:__ #{record.method}")
     |> puts("* __Path:__ #{path}")
 
@@ -59,6 +60,7 @@ defmodule Bureaucrat.MarkdownWriter do
     |> puts("```json")
     |> puts("#{format_resp_body(record.resp_body)}")
     |> puts("```")
+    |> puts("")
   end
 
   def format_body_params(params) do
