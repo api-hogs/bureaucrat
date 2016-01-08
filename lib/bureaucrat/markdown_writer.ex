@@ -40,8 +40,8 @@ defmodule Bureaucrat.MarkdownWriter do
     end
 
     file
-    |> puts("### #{record.assigns.bureaucrat_desc}")
-    |> puts("#### Request")
+    |> puts("#### #{record.assigns.bureaucrat_desc}")
+    |> puts("##### Request")
     |> puts("* __Method:__ #{record.method}")
     |> puts("* __Path:__ #{path}")
 
@@ -67,7 +67,7 @@ defmodule Bureaucrat.MarkdownWriter do
     end
 
     file
-    |> puts("#### Response")
+    |> puts("##### Response")
     |> puts("* __Status__: #{record.status}")
 
 
