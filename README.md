@@ -23,7 +23,7 @@ $ mix deps.get
 ```
 
 Next, in your `test/test_helper.exs` you should start Bureaucrat and configure
-ExUnit to use it's formatter. You would probably like to keep the default
+ExUnit to use its formatter. You would probably like to keep the default
 `ExUnit.CLIFormatter` as well.
 
 ```elixir
