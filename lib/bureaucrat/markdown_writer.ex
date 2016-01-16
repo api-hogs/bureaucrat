@@ -40,10 +40,23 @@ defmodule Bureaucrat.MarkdownWriter do
     end
 
     file
+    |> puts("#### #{record.assigns.bureaucrat_desc}")
+    |> puts("##### Request")
     |> puts("* __Method:__ #{record.method}")
     |> puts("* __Path:__ #{path}")
 
-    # TODO maybe show req_headers
+    unless record.req_headers == [] do
+      file
+      |> puts("* __Request headers:__")
+      |> puts("```")
+
+      Enum.each record.req_headers, fn({header, value}) ->
+        puts file, "#{header}: #{value}"
+      end
+
+      file
+      |> puts("```")
+    end
 
     unless record.body_params == %{} do
       file
@@ -54,11 +67,29 @@ defmodule Bureaucrat.MarkdownWriter do
     end
 
     file
+    |> puts("##### Response")
     |> puts("* __Status__: #{record.status}")
+
+
+    unless record.resp_headers == [] do
+      file
+      |> puts("* __Response headers:__")
+      |> puts("```")
+
+      Enum.each record.resp_headers, fn({header, value}) ->
+        puts file, "#{header}: #{value}"
+      end
+
+      file
+      |> puts("```")
+    end
+
+    file
     |> puts("* __Response body:__")
     |> puts("```json")
     |> puts("#{format_resp_body(record.resp_body)}")
     |> puts("```")
+    |> puts("")
   end
 
   def format_body_params(params) do

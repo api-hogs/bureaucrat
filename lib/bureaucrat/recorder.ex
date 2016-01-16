@@ -5,8 +5,8 @@ defmodule Bureaucrat.Recorder do
     {:ok, _} = GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
-  def doc(conn, desc) do
-    GenServer.cast(__MODULE__, {:doc, conn, desc})
+  def doc(conn, desc, line) do
+    GenServer.cast(__MODULE__, {:doc, conn, desc, line})
   end
 
   def get_records do
@@ -17,8 +17,11 @@ defmodule Bureaucrat.Recorder do
     {:ok, []}
   end
 
-  def handle_cast({:doc, conn, desc}, records) do
-    conn = Plug.Conn.assign(conn, :bureaucrat_desc, desc)
+  def handle_cast({:doc, conn, desc, line}, records) do
+    conn =
+      conn
+      |> Plug.Conn.assign(:bureaucrat_desc, desc)
+      |> Plug.Conn.assign(:bureaucrat_line, line)
     {:noreply, [conn | records]}
   end
 
