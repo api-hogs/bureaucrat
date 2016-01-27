@@ -97,6 +97,10 @@ defmodule Bureaucrat.MarkdownWriter do
     json
   end
 
+  defp format_resp_body("") do
+    ""
+  end
+
   defp format_resp_body(string) do
     {:ok, struct} = Poison.decode(string)
     {:ok, json} = Poison.encode(struct, pretty: true)
