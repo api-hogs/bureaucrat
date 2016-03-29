@@ -2,7 +2,7 @@ defmodule Bureaucrat.MarkdownWriter do
   def write(records, path) do
     {:ok, file} = File.open path, [:write, :utf8]
     records = group_records(records)
-    puts(file, "# API Documentation")
+    puts(file, "# API Documentation\n")
     write_table_of_contents(records, file)
     Enum.each(records, fn {controller, records} ->
       write_controller(controller, records, file)
