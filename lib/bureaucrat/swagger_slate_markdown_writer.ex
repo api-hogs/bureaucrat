@@ -1,0 +1,328 @@
+defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
+@moduledoc """
+This markdown writer integrates swagger information and outputs in a slate-friendly markdown format.
+It requires that the decoded swagger data be available via Application.get_env(:bureaucrat, :swagger),
+eg by passing it as an option to the Bureaucrat.start/1 function.
+"""
+
+  alias Plug.Conn
+
+  # pipeline-able puts
+  defp puts(file, string) do
+    IO.puts(file, string)
+    file
+  end
+
+  @doc """
+  Writes a list of Plug.Conn records to the given file path.
+
+  Each Conn should have request and response data populated,
+   and the private.phoenix_controller, private.phoenix_action values set for linking to swagger.
+  """
+  def write(records, path) do
+    {:ok, file} = File.open path, [:write, :utf8]
+    swagger = Application.get_env(:bureaucrat, :swagger)
+
+    write_overview(file, swagger)
+    write_authentication(file, swagger)
+    write_models(file, swagger)
+
+    records
+      |> tag_records(swagger)
+      |> group_records()
+      |> Enum.each(fn {tag, records_by_operation_id} ->
+           write_operations_for_tag(file, tag, records_by_operation_id, swagger)
+         end)
+  end
+
+  @doc """
+  Writes the document title and api summary description.
+
+  This corresponds to the info section of the swagger document.
+  """
+  def write_overview(file, swagger) do
+    info = swagger["info"]
+    file
+    |> puts("""
+    ---
+    title: #{info["title"]}
+
+    search: true
+    ---
+
+    # #{info["title"]}
+
+    #{info["description"]}
+    """)
+  end
+
+  @doc """
+  Writes the authentication details to the given file.
+
+  This corresponds to the securityDefinitions section of the swagger document.
+  """
+  def write_authentication(file, swagger) do
+    file
+    |> puts("# Authentication\n")
+
+    # TODO: Document token based security
+    Enum.each swagger["security"], fn {name, _details} ->
+       definition = swagger["securityDefinitions"][name]
+       file
+       |> puts("## #{definition["type"]}\n")
+       |> puts("#{definition["description"]}\n")
+     end
+  end
+
+  @doc """
+  Writes the API request/response model schemas to the given file.
+
+  This corresponds to the definitions section of the swagger document.
+  Each top level definition will be written as a table.
+  Nested objects are flattened out to reduce the number of tables being produced.
+  """
+  def write_models(file, swagger) do
+    puts(file, "# Models\n")
+    Enum.each swagger["definitions"], fn definition ->
+      write_model(file, definition)
+    end
+    file
+  end
+
+  @doc """
+  Writes a single API model schema to the given file.
+
+  Most of the work is delegated to the write_model_properties/3 recurive function.
+  The example json is output before the table just so slate will align them.
+  """
+  def write_model(file, {name, model_schema}) do
+    {:ok, json} = Poison.encode(model_schema["example"], pretty: true)
+
+    file
+    |> puts("## #{name}\n")
+    |> puts("#{model_schema["description"]}")
+    |> puts("\n```json")
+    |> puts(json)
+    |> puts("```\n")
+    |> puts("|Property|Description|Type|Required|")
+    |> puts("|--------|-----------|----|--------|")
+    |> write_model_properties(model_schema)
+  end
+
+  @doc """
+  Writes the fields of the given model to file.
+
+  prefix is output before each property name to enable nested objects to be flattened.
+  """
+  def write_model_properties(file, model_schema, prefix \\ "") do
+    Enum.each model_schema["properties"], fn {property, property_details} ->
+      required? = property in model_schema["required"]
+      type = property_details["type"]
+      case type do
+        "object" ->
+          #TODO: handle object with schema reference
+          write_model_properties(file, property_details, prefix <> "#{property}.")
+        _ ->
+          if type == "array" do
+            #TODO: handle arrays with inline schema
+            schema_ref = property_details["items"]["$ref"]
+            type = "array(#{schema_ref_to_link(schema_ref)})"
+          end
+          puts(file, "|#{prefix}#{property}|#{property_details["description"]}|#{type}|#{required?}|")
+      end
+    end
+    file
+  end
+
+  # Convert a schema reference eg, #/definitions/User to a markdown link
+  defp schema_ref_to_link(schema_ref) do
+    type = String.replace_prefix(schema_ref, "#/definitions/", "")
+    "[#{type}](##{String.downcase(type)})"
+  end
+
+  @doc """
+  Populate each test record with private.swagger_tag and private.operation_id from swagger.
+  """
+  def tag_records(records, swagger) do
+    tags_by_operation_id =
+      for {_path, actions} <- swagger["paths"],
+          {_action, details} <- actions do
+        [first_tag|_] = details["tags"]
+        {details["operationId"], first_tag}
+      end
+      |> Enum.into(%{})
+
+    Enum.map(records, &(tag_record(&1, tags_by_operation_id)))
+  end
+
+  @doc """
+  Tag a single record with swagger tag and operation_id.
+  """
+  def tag_record(conn, tags_by_operation_id) do
+    controller =
+      conn.private.phoenix_controller
+      |> to_string()
+      |> String.replace_prefix("Elixir.","")
+
+    action = conn.private.phoenix_action
+    operation_id = "#{controller}.#{action}"
+    conn
+    |> Conn.put_private(:swagger_tag, tags_by_operation_id[operation_id])
+    |> Conn.put_private(:swagger_operation_id, operation_id)
+  end
+
+  @doc """
+  Group a list of tagged records, first by tag, then by operation_id.
+  """
+  def group_records(records) do
+    by_tag = Enum.group_by(records, &(&1.private.swagger_tag))
+    Enum.map by_tag, fn {tag, records_with_tag} ->
+      by_operation_id = Enum.group_by(records_with_tag, &(&1.private.swagger_operation_id))
+      {tag, by_operation_id}
+    end
+  end
+
+  @doc """
+  Writes the API details and exampels for operations having the given tag.
+
+  tag roughly corresponds to a phoenix controller, eg "Users"
+  records_by_operation_id are the examples collected during tests, grouped by operationId (Controller.action)
+  """
+  def write_operations_for_tag(file, tag, records_by_operation_id, swagger) do
+    tag_details = swagger["tags"] |> Enum.find(&(&1["name"] == tag))
+
+    file
+    |> puts("# #{tag}\n")
+    |> puts("#{tag_details["description"]}\n")
+
+    Enum.each records_by_operation_id, fn {operation_id, records} ->
+      write_action(file, operation_id, records, swagger)
+    end
+    file
+  end
+
+  @doc """
+  Writes all examples of a given operation (Controller action) to file.
+  """
+  def write_action(file, operation_id, records, swagger) do
+    details = find_operation_by_id(swagger, operation_id)
+    puts(file, "## #{details["summary"]}\n")
+
+    # write examples before params/schemas to get correct alignment in slate
+    Enum.each records, fn record ->
+      write_example(file, record)
+    end
+
+    file
+    |> puts("#{details["description"]}\n")
+    |> write_parameters(details)
+    |> write_responses(details)
+  end
+
+  @doc """
+  Find the details of an API operation in swagger by operationId
+  """
+  def find_operation_by_id(swagger, operation_id) do
+    Enum.flat_map(swagger["paths"], fn {_path, actions} ->
+      Enum.map(actions, fn {_action, details} -> details end)
+    end)
+    |> Enum.find(fn details ->
+      details["operationId"] == operation_id
+    end)
+  end
+
+  @doc """
+  Writes the parameters table for given swagger operation to file.
+
+  Uses the vendor extension "x-example" to provide example of each parameter.
+  TODO: detailed schema validation rules aren't shown yet (min/max/regex/etc...)
+  """
+  def write_parameters(file, swagger_operation) do
+    file
+    |> puts("#### Parameters\n")
+    |> puts("| Parameter   | Description | In |Type      | Required | Default | Example |")
+    |> puts("|-------------|-------------|----|----------|----------|---------|---------|")
+
+    Enum.each swagger_operation["parameters"], fn param ->
+      content =
+        ["name", "description", "in", "type", "required", "default", "x-example"]
+        |> Enum.map(&(param[&1]))
+        |> Enum.join("|")
+      puts(file, "|#{content}|")
+    end
+    puts file, ""
+  end
+
+  @doc """
+  Writes the responses table for given swagger operation to file.
+
+  Swagger only allows a single description per status code, which can be limiting
+   when trying to describe all possible error responses.  To work around this, add
+   markdown links into the description.
+  """
+  def write_responses(file, swagger_operation) do
+    file
+    |> puts("#### Responses\n")
+    |> puts("| Status | Description | Schema |")
+    |> puts("|--------|-------------|--------|")
+
+    Enum.each swagger_operation["responses"], fn {status, response} ->
+      type = response["schema"]["$ref"] |> String.replace_prefix("#/definitions/", "")
+      puts(file, "|#{status} | #{response["description"]} | [#{type}](##{String.downcase(type)})|")
+    end
+  end
+
+  @doc """
+  Writes a single request/response example to file
+  """
+  def write_example(file, record) do
+    path = case record.query_string do
+      "" -> record.request_path
+      str -> "#{record.request_path}?#{str}"
+    end
+
+    # Request with path and headers
+    file
+    |> puts("> #{record.assigns.bureaucrat_desc}\n")
+    |> puts("```plaintext")
+    |> puts("#{record.method} #{path}")
+    Enum.each record.req_headers, fn {header, value} ->
+      puts file, "#{header}: #{value}"
+    end
+    puts(file, "```\n")
+
+    # Request Body if applicable
+    unless record.body_params == %{} do
+      file
+      |> puts("```json")
+      |> puts("#{Poison.encode!(record.body_params, pretty: true)}")
+      |> puts("```\n")
+    end
+
+    # Response with status and headers
+    file
+    |> puts("> Response\n")
+    |> puts("```plaintext")
+    |> puts("#{record.status}")
+    Enum.each record.resp_headers, fn {header, value} ->
+      puts file, "#{header}: #{value}"
+    end
+    puts(file, "```\n")
+
+    # Response body
+    file
+    |> puts("```json")
+    |> puts("#{format_resp_body(record.resp_body)}")
+    |> puts("```\n")
+  end
+
+  @doc """
+  Pretty-print a JSON response, handling body correctly
+  """
+  def format_resp_body(string) do
+    case string do
+      "" -> ""
+      _ -> string |> Poison.decode!() |> Poison.encode!(pretty: true)
+    end
+  end
+end
