@@ -23,9 +23,10 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     {:ok, file} = File.open path, [:write, :utf8]
     swagger = Application.get_env(:bureaucrat, :swagger)
 
-    write_overview(file, swagger)
-    write_authentication(file, swagger)
-    write_models(file, swagger)
+    file
+    |> write_overview(swagger)
+    |> write_authentication(swagger)
+    |> write_models(swagger)
 
     records
       |> tag_records(swagger)
@@ -72,6 +73,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
        |> puts("## #{definition["type"]}\n")
        |> puts("#{definition["description"]}\n")
      end
+     file
   end
 
   @doc """
@@ -118,20 +120,25 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     Enum.each model_schema["properties"], fn {property, property_details} ->
       required? = property in model_schema["required"]
       type = property_details["type"]
-      case type do
-        "object" ->
-          #TODO: handle object with schema reference
-          write_model_properties(file, property_details, prefix <> "#{property}.")
-        _ ->
-          if type == "array" do
-            #TODO: handle arrays with inline schema
-            schema_ref = property_details["items"]["$ref"]
-            type = "array(#{schema_ref_to_link(schema_ref)})"
-          end
-          puts(file, "|#{prefix}#{property}|#{property_details["description"]}|#{type}|#{required?}|")
-      end
+      write_model_property(file, "#{prefix}#{property}", property_details, type, required?)
     end
     file
+  end
+
+  def write_model_property(file, property, property_details, "object", _required?) do
+    #TODO: handle object with schema reference
+    write_model_properties(file, property_details, "#{property}.")
+  end
+
+  def write_model_property(file, property, property_details, "array", required?) do
+    #TODO: handle arrays with inline schema
+    schema_ref = property_details["items"]["$ref"]
+    type = "array(#{schema_ref_to_link(schema_ref)})"
+    write_model_property(file, property, property_details, type, required?)
+  end
+
+  def write_model_property(file, property, property_details, type, required?) do
+    puts(file, "|#{property}|#{property_details["description"]}|#{type}|#{required?}|")
   end
 
   # Convert a schema reference eg, #/definitions/User to a markdown link
@@ -209,9 +216,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     puts(file, "## #{details["summary"]}\n")
 
     # write examples before params/schemas to get correct alignment in slate
-    Enum.each records, fn record ->
-      write_example(file, record)
-    end
+    Enum.each(records, &(write_example(file, &1)))
 
     file
     |> puts("#{details["description"]}\n")
@@ -286,10 +291,8 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     |> puts("> #{record.assigns.bureaucrat_desc}\n")
     |> puts("```plaintext")
     |> puts("#{record.method} #{path}")
-    Enum.each record.req_headers, fn {header, value} ->
-      puts file, "#{header}: #{value}"
-    end
-    puts(file, "```\n")
+    |> write_headers(record.req_headers)
+    |> puts("```\n")
 
     # Request Body if applicable
     unless record.body_params == %{} do
@@ -304,10 +307,8 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     |> puts("> Response\n")
     |> puts("```plaintext")
     |> puts("#{record.status}")
-    Enum.each record.resp_headers, fn {header, value} ->
-      puts file, "#{header}: #{value}"
-    end
-    puts(file, "```\n")
+    |> write_headers(record.resp_headers)
+    |> puts("```\n")
 
     # Response body
     file
@@ -317,12 +318,22 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   end
 
   @doc """
+  Write the list of request/response headers
+  """
+  def write_headers(file, headers) do
+    Enum.each headers, fn {header, value} ->
+      puts file, "#{header}: #{value}"
+    end
+    file
+  end
+
+  @doc """
   Pretty-print a JSON response, handling body correctly
   """
   def format_resp_body(string) do
     case string do
       "" -> ""
-      _ -> string |> Poison.decode!() |> Poison.encode!(pretty: true)
+      _ -> string |> Poison.decode! |> Poison.encode!(pretty: true)
     end
   end
 end
