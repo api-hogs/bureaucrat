@@ -67,7 +67,8 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     |> puts("# Authentication\n")
 
     # TODO: Document token based security
-    Enum.each swagger["security"], fn {name, _details} ->
+    Enum.each swagger["security"], fn securityRequirement ->
+       name = Map.keys(securityRequirement) |> List.first
        definition = swagger["securityDefinitions"][name]
        file
        |> puts("## #{definition["type"]}\n")
