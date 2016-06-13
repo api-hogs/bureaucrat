@@ -119,7 +119,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   """
   def write_model_properties(file, model_schema, prefix \\ "") do
     Enum.each model_schema["properties"], fn {property, property_details} ->
-      required? = property in model_schema["required"]
+      required? = is_required(property, model_schema)
       type = property_details["type"]
       write_model_property(file, "#{prefix}#{property}", property_details, type, required?)
     end
@@ -141,6 +141,9 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   def write_model_property(file, property, property_details, type, required?) do
     puts(file, "|#{property}|#{property_details["description"]}|#{type}|#{required?}|")
   end
+
+  defp is_required(property, %{"required" => required}), do: property in required
+  defp is_required(_property, _schema), do: false
 
   # Convert a schema reference eg, #/definitions/User to a markdown link
   defp schema_ref_to_link(schema_ref) do
