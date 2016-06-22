@@ -99,17 +99,25 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   The example json is output before the table just so slate will align them.
   """
   def write_model(file, {name, model_schema}) do
-    {:ok, json} = Poison.encode(model_schema["example"], pretty: true)
 
     file
     |> puts("## #{name}\n")
     |> puts("#{model_schema["description"]}")
-    |> puts("\n```json")
-    |> puts(json)
-    |> puts("```\n")
+    |> write_model_example(model_schema)
     |> puts("|Property|Description|Type|Required|")
     |> puts("|--------|-----------|----|--------|")
     |> write_model_properties(model_schema)
+  end
+
+  def write_model_example(file, %{"example" => example}) do
+    json = Poison.encode!(example, pretty: true)
+    file
+    |> puts("\n```json")
+    |> puts(json)
+    |> puts("```\n")
+  end
+  def write_model_example(file, _) do
+    puts(file, "")
   end
 
   @doc """
