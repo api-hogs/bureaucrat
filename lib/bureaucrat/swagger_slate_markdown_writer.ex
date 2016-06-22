@@ -99,17 +99,25 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   The example json is output before the table just so slate will align them.
   """
   def write_model(file, {name, model_schema}) do
-    {:ok, json} = Poison.encode(model_schema["example"], pretty: true)
 
     file
     |> puts("## #{name}\n")
     |> puts("#{model_schema["description"]}")
-    |> puts("\n```json")
-    |> puts(json)
-    |> puts("```\n")
+    |> write_model_example(model_schema)
     |> puts("|Property|Description|Type|Required|")
     |> puts("|--------|-----------|----|--------|")
     |> write_model_properties(model_schema)
+  end
+
+  def write_model_example(file, %{"example" => example}) do
+    json = Poison.encode!(example, pretty: true)
+    file
+    |> puts("\n```json")
+    |> puts(json)
+    |> puts("```\n")
+  end
+  def write_model_example(file, _) do
+    puts(file, "")
   end
 
   @doc """
@@ -132,9 +140,11 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   end
 
   def write_model_property(file, property, property_details, "array", required?) do
+    schema = property_details["items"]
+
     #TODO: handle arrays with inline schema
-    schema_ref = property_details["items"]["$ref"]
-    type = "array(#{schema_ref_to_link(schema_ref)})"
+    schema_ref = if schema != nil, do: schema["$ref"], else: nil
+    type = if schema_ref != nil, do: "array(#{schema_ref_to_link(schema_ref)})", else: "array(any)"
     write_model_property(file, property, property_details, type, required?)
   end
 
