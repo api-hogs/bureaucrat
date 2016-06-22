@@ -132,9 +132,11 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   end
 
   def write_model_property(file, property, property_details, "array", required?) do
+    schema = property_details["items"]
+
     #TODO: handle arrays with inline schema
-    schema_ref = property_details["items"]["$ref"]
-    type = "array(#{schema_ref_to_link(schema_ref)})"
+    schema_ref = if schema != nil, do: schema["$ref"], else: nil
+    type = if schema_ref != nil, do: "array(#{schema_ref_to_link(schema_ref)})", else: "array(any)"
     write_model_property(file, property, property_details, type, required?)
   end
 
