@@ -87,7 +87,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   def write_models(file, swagger) do
     puts(file, "# Models\n")
     Enum.each swagger["definitions"], fn definition ->
-      write_model(file, definition)
+      write_model(file, swagger, definition)
     end
     file
   end
@@ -98,7 +98,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   Most of the work is delegated to the write_model_properties/3 recurive function.
   The example json is output before the table just so slate will align them.
   """
-  def write_model(file, {name, model_schema}) do
+  def write_model(file, swagger, {name, model_schema}) do
 
     file
     |> puts("## #{name}\n")
@@ -106,7 +106,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     |> write_model_example(model_schema)
     |> puts("|Property|Description|Type|Required|")
     |> puts("|--------|-----------|----|--------|")
-    |> write_model_properties(model_schema)
+    |> write_model_properties(swagger, model_schema)
   end
 
   def write_model_example(file, %{"example" => example}) do
@@ -125,30 +125,39 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
 
   prefix is output before each property name to enable nested objects to be flattened.
   """
-  def write_model_properties(file, model_schema, prefix \\ "") do
+  def write_model_properties(file, swagger, model_schema, prefix \\ "") do
     Enum.each model_schema["properties"], fn {property, property_details} ->
+      {property_details, type} = resolve_type(swagger, property_details)
       required? = is_required(property, model_schema)
-      type = property_details["type"]
-      write_model_property(file, "#{prefix}#{property}", property_details, type, required?)
+      write_model_property(file, swagger, "#{prefix}#{property}", property_details, type, required?)
     end
     file
   end
 
-  def write_model_property(file, property, property_details, "object", _required?) do
-    #TODO: handle object with schema reference
-    write_model_properties(file, property_details, "#{property}.")
+  def resolve_type(swagger, %{"$ref" => schema_ref}) do
+    schema_name = String.replace_prefix(schema_ref, "#/definitions/", "")
+    property_details = swagger["definitions"][schema_name]
+    type = schema_ref_to_link(schema_ref)
+    {property_details, type}
+  end
+  def resolve_type(_swagger, property_details) do
+    {property_details, property_details["type"]}
   end
 
-  def write_model_property(file, property, property_details, "array", required?) do
+  def write_model_property(file, swagger, property, property_details, "object", _required?) do
+    write_model_properties(file, swagger, property_details, "#{property}.")
+  end
+
+  def write_model_property(file, swagger, property, property_details, "array", required?) do
     schema = property_details["items"]
 
     #TODO: handle arrays with inline schema
     schema_ref = if schema != nil, do: schema["$ref"], else: nil
     type = if schema_ref != nil, do: "array(#{schema_ref_to_link(schema_ref)})", else: "array(any)"
-    write_model_property(file, property, property_details, type, required?)
+    write_model_property(file, swagger, property, property_details, type, required?)
   end
 
-  def write_model_property(file, property, property_details, type, required?) do
+  def write_model_property(file, _swagger, property, property_details, type, required?) do
     puts(file, "|#{property}|#{property_details["description"]}|#{type}|#{required?}|")
   end
 
