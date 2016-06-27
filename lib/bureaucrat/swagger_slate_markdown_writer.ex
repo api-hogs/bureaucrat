@@ -107,6 +107,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     |> puts("|Property|Description|Type|Required|")
     |> puts("|--------|-----------|----|--------|")
     |> write_model_properties(swagger, model_schema)
+    |> puts("")
   end
 
   def write_model_example(file, %{"example" => example}) do
@@ -126,7 +127,12 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   prefix is output before each property name to enable nested objects to be flattened.
   """
   def write_model_properties(file, swagger, model_schema, prefix \\ "") do
-    Enum.each model_schema["properties"], fn {property, property_details} ->
+    {objects, primitives} = model_schema["properties"]
+      |> Enum.partition(fn {_key, schema} -> schema["type"] == "object" end)
+
+    ordered = Enum.concat(primitives, objects)
+
+    Enum.each ordered, fn {property, property_details} ->
       {property_details, type} = resolve_type(swagger, property_details)
       required? = is_required(property, model_schema)
       write_model_property(file, swagger, "#{prefix}#{property}", property_details, type, required?)
