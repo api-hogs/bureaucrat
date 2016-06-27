@@ -62,12 +62,12 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
 
   This corresponds to the securityDefinitions section of the swagger document.
   """
-  def write_authentication(file, swagger) do
+  def write_authentication(file, %{"security" => security} = swagger) do
     file
     |> puts("# Authentication\n")
 
     # TODO: Document token based security
-    Enum.each swagger["security"], fn securityRequirement ->
+    Enum.each security, fn securityRequirement ->
        name = Map.keys(securityRequirement) |> List.first
        definition = swagger["securityDefinitions"][name]
        file
@@ -76,6 +76,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
      end
      file
   end
+  def write_authentication(file, _), do: file
 
   @doc """
   Writes the API request/response model schemas to the given file.
