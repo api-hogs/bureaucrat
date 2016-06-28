@@ -272,13 +272,13 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   Uses the vendor extension "x-example" to provide example of each parameter.
   TODO: detailed schema validation rules aren't shown yet (min/max/regex/etc...)
   """
-  def write_parameters(file, swagger_operation) do
+  def write_parameters(file, _ = %{"parameters" => params}) do
     file
     |> puts("#### Parameters\n")
     |> puts("| Parameter   | Description | In |Type      | Required | Default | Example |")
     |> puts("|-------------|-------------|----|----------|----------|---------|---------|")
 
-    Enum.each swagger_operation["parameters"], fn param ->
+    Enum.each params, fn param ->
       content =
         ["name", "description", "in", "type", "required", "default", "x-example"]
         |> Enum.map(&(param[&1]))
@@ -287,6 +287,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     end
     puts file, ""
   end
+  def write_parameters(file, _), do: file
 
   @doc """
   Writes the responses table for given swagger operation to file.
