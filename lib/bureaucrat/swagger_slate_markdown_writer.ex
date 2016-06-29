@@ -172,8 +172,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   defp is_required(_property, _schema), do: false
 
   # Convert a schema reference eg, #/definitions/User to a markdown link
-  defp schema_ref_to_link(schema_ref) do
-    type = String.replace_prefix(schema_ref, "#/definitions/", "")
+  def schema_ref_to_link("#/definitions/" <> type) do
     "[#{type}](##{String.downcase(type)})"
   end
 
@@ -302,8 +301,9 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     |> puts("|--------|-------------|--------|")
 
     Enum.each swagger_operation["responses"], fn {status, response} ->
-      type = response["schema"]["$ref"] |> String.replace_prefix("#/definitions/", "")
-      puts(file, "|#{status} | #{response["description"]} | [#{type}](##{String.downcase(type)})|")
+      ref = get_in response, ["schema", "$ref"]
+      schema = if ref, do: schema_ref_to_link(ref), else: ""
+      puts(file, "|#{status} | #{response["description"]} | #{schema}|")
     end
   end
 
