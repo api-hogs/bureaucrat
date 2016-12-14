@@ -47,7 +47,7 @@ Usage
 -----
 
 Bureaucrat collects data from connection structs used in tests.
-If you want a connection to be documented, pass it to the `doc/1` funciton:
+If you want a connection to be documented, pass it to the `doc/1` function:
 
 ```elixir
 test "GET /api/v1/products" do
@@ -56,6 +56,18 @@ test "GET /api/v1/products" do
       |> doc
   assert conn.status == 200
 end
+```
+
+Additional options can be passed to the backend formatter:
+
+```elixir
+test "GET /api/v1/products" do
+  conn = conn()
+      |> get("/api/v1/products")
+      |> doc(description: "List all products", operation_id: "list_products")
+  assert conn.status == 200
+end
+
 ```
 
 Then, to generate the documentation file(s) run `DOC=1 mix test`.
