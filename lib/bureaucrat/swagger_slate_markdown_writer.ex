@@ -195,16 +195,8 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   Tag a single record with swagger tag and operation_id.
   """
   def tag_record(conn, tags_by_operation_id) do
-    controller =
-      conn.private.phoenix_controller
-      |> to_string()
-      |> String.replace_prefix("Elixir.","")
-
-    action = conn.private.phoenix_action
-    operation_id = "#{controller}.#{action}"
-    conn
-    |> Conn.put_private(:swagger_tag, tags_by_operation_id[operation_id])
-    |> Conn.put_private(:swagger_operation_id, operation_id)
+    operation_id = conn.assigns.bureaucrat_opts[:operation_id]
+    Conn.put_private(conn, :swagger_tag, tags_by_operation_id[operation_id])
   end
 
   @doc """
@@ -213,7 +205,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   def group_records(records) do
     by_tag = Enum.group_by(records, &(&1.private.swagger_tag))
     Enum.map by_tag, fn {tag, records_with_tag} ->
-      by_operation_id = Enum.group_by(records_with_tag, &(&1.private.swagger_operation_id))
+      by_operation_id = Enum.group_by(records_with_tag, &(&1.assigns.bureaucrat_opts[:operation_id]))
       {tag, by_operation_id}
     end
   end
