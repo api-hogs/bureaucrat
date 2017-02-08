@@ -7,7 +7,7 @@ defmodule Bureaucrat.Formatter do
 
   def handle_event({:suite_finished, _run_us, _load_us}, nil) do
     env_var = Application.get_env(:bureaucrat, :env_var)
-    if System.get_env(env_var), do: generate_docs
+    if System.get_env(env_var), do: generate_docs()
     :remove_handler
   end
 

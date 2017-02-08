@@ -6,8 +6,8 @@ defmodule Bureaucrat.Mixfile do
      version: "0.1.4",
      elixir: "~> 1.0",
      description: "Generate Phoenix API documentation from tests",
-     deps: deps,
-     package: package]
+     deps: deps(),
+     package: package()]
   end
 
   # Configuration for the OTP application
