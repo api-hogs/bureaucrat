@@ -27,7 +27,8 @@ defmodule Bureaucrat.Mixfile do
   defp deps do
     [
      {:plug, "~> 1.0"},
-     {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0"}
+     {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0"},
+     {:phoenix, "~> 1.2", optional: true}
     ]
   end
 
