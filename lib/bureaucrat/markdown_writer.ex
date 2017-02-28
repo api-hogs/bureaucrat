@@ -12,24 +12,25 @@ defmodule Bureaucrat.MarkdownWriter do
   defp write_table_of_contents(records, file) do
     Enum.each(records, fn {controller, actions} ->
       anchor = to_anchor(controller)
-      puts(file, "* [#{controller}](##{anchor})")
+      puts(file, "  * [#{controller}](##{anchor})")
       Enum.each(actions, fn {action, _} ->
-        anchor = to_anchor("#{controller}.#{action}")
-        puts(file, "  * [#{action}](##{anchor})")
+        anchor = to_anchor(controller, action)
+        puts(file, "    * [#{action}](##{anchor})")
       end)
     end)
     puts(file, "")
   end
 
   defp write_controller(controller, records, file) do
-    puts(file, "## #{to_string(controller)}")
+    puts(file, "## #{controller}")
     Enum.each(records, fn {action, records} ->
       write_action(action, controller, records, file)
     end)
   end
 
   defp write_action(action, controller, records, file) do
-    puts(file, "### #{controller}.#{action}")
+    anchor = to_anchor(controller, action)
+    puts(file, "### <a id=#{anchor}></a>#{action}")
     Enum.each(records, &(write_example(&1, file)))
   end
 
@@ -163,10 +164,11 @@ defmodule Bureaucrat.MarkdownWriter do
     end
   end
 
+  defp to_anchor(controller, action), do: to_anchor("#{controller}.#{action}")
   defp to_anchor(name) do
     name
     |> String.downcase
-    |> String.replace(".", "")
+    |> String.replace(".", "-")
   end
 
   defp group_records(records) do
