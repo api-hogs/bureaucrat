@@ -43,6 +43,8 @@ defmodule Spell.ConnCase do
 end
 ```
 
+To generate Phoenix channel documentation, import the helpers in `test/support/channel_case.ex` alike.
+
 Usage
 -----
 
