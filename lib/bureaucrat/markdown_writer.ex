@@ -33,6 +33,50 @@ defmodule Bureaucrat.MarkdownWriter do
     Enum.each(records, &(write_example(&1, file)))
   end
 
+  defp write_example({%Phoenix.Socket.Broadcast{topic: topic, payload: payload, event: event} = reply, _}, file) do
+    file
+    |> puts("#### Broadcast")
+    |> puts("* __Topic:__ #{topic}")
+    |> puts("* __Event:__ #{event}")
+
+    if payload != %{} do
+      file
+      |> puts("* __Body:__")
+      |> puts("```json")
+      |> puts("#{format_body_params(payload)}")
+      |> puts("```")
+    end
+  end
+
+  defp write_example({%Phoenix.Socket.Message{topic: topic, payload: payload, event: event} = reply, _}, file) do
+    file
+    |> puts("#### Message")
+    |> puts("* __Topic:__ #{topic}")
+    |> puts("* __Event:__ #{event}")
+
+    if payload != %{} do
+      file
+      |> puts("* __Body:__")
+      |> puts("```json")
+      |> puts("#{format_body_params(payload)}")
+      |> puts("```")
+    end
+  end
+
+  defp write_example({%Phoenix.Socket.Reply{topic: topic, payload: payload, status: status} = reply, _}, file) do
+    file
+    |> puts("#### Reply")
+    |> puts("* __Status:__ #{status}")
+
+    if payload != %{} do
+      file
+      |> puts("* __Body:__")
+      |> puts("```json")
+      |> puts("#{format_body_params(payload)}")
+      |> puts("```")
+    end
+  end
+
   defp write_example(record, file) do
     path = case record.query_string do
       "" -> record.request_path
@@ -126,9 +170,15 @@ defmodule Bureaucrat.MarkdownWriter do
   end
 
   defp group_records(records) do
-    by_controller = Enum.group_by(records, &(strip_ns(&1.private.phoenix_controller)))
+    by_controller = Enum.group_by(records, &get_controller/1)
     Enum.map(by_controller, fn {c, recs} ->
-      {c, Enum.group_by(recs, &(&1.private.phoenix_action))}
+      {c, Enum.group_by(recs, &get_action/1)}
     end)
   end
+
+  defp get_controller({_, opts}), do: strip_ns(opts[:module])
+  defp get_controller(conn), do: strip_ns(conn.private.phoenix_controller)
+
+  defp get_action({_, opts}), do: opts[:description]
+  defp get_action(conn), do: conn.private.phoenix_action
 end

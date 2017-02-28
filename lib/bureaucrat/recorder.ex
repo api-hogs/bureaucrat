@@ -1,8 +1,22 @@
 defmodule Bureaucrat.Recorder do
   use GenServer
 
+  alias Phoenix.Socket.{Broadcast, Message, Reply}
+
   def start_link do
     {:ok, _} = GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  end
+
+  def doc(%Broadcast{} = broadcast, opts) do
+    GenServer.cast(__MODULE__, {:channel_doc, broadcast, opts})
+  end
+
+  def doc(%Message{} = message, opts) do
+    GenServer.cast(__MODULE__, {:channel_doc, message, opts})
+  end
+
+  def doc(%Reply{} = reply, opts) do
+    GenServer.cast(__MODULE__, {:channel_doc, reply, opts})
   end
 
   def doc(conn, opts) do
@@ -25,6 +39,10 @@ defmodule Bureaucrat.Recorder do
       |> Plug.Conn.assign(:bureaucrat_opts, opts)
 
     {:noreply, [conn | records]}
+  end
+
+  def handle_cast({:channel_doc, message, opts}, records) do
+    {:noreply, [{message, opts} | records]}
   end
 
   def handle_call(:get_records, _from, records) do
