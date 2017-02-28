@@ -73,6 +73,28 @@ end
 Then, to generate the documentation file(s) run `DOC=1 mix test`.
 The default output file is `web/controllers/README.md`.
 
+Documenting Phoenix Channels
+----------------------------
+
+Bureaucrat can also generate documentation for messages, replies and broadcasts in [Phoenix Channels](http://www.phoenixframework.org/docs/channels).
+
+Results of `assert_push`, `assert_broadcast` and the underlying `assert_receive` (if used for messages or broadcasts) can be passed to the `doc` function.
+
+To document usage of [Phoenix.ChannelTest](https://hexdocs.pm/phoenix/Phoenix.ChannelTest.html) helpers `push`, `broadcast_from` and `broadcast_from!`, Bureaucrat includes documenting alternatives, prefixed with `doc_`:
+  * `doc_push`
+  * `doc_broadcast_from`
+  * `doc_broadcast_fron!`
+
+```elixir
+test "message:new broadcasts are pushed to the client", %{socket: socket} do
+  doc_broadcast_from! socket, "message:new", %{body: "Hello there!", timestamp: 1483971926566, user: "marla"}
+  assert_push("message:new", %{body: "Hello there!", timestamp: 1483971926566, user: "marla"})
+  |> doc
+end
+```
+
+Channels docs output is currently only supported by the `Bureaucrat.MarkdownWriter` and only to the `default_path` (see [Configuration](#configuration) below).
+
 Configuration
 -------------
 

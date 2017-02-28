@@ -12,25 +12,70 @@ defmodule Bureaucrat.MarkdownWriter do
   defp write_table_of_contents(records, file) do
     Enum.each(records, fn {controller, actions} ->
       anchor = to_anchor(controller)
-      puts(file, "* [#{controller}](##{anchor})")
+      puts(file, "  * [#{controller}](##{anchor})")
       Enum.each(actions, fn {action, _} ->
-        anchor = to_anchor("#{controller}.#{action}")
-        puts(file, "  * [#{action}](##{anchor})")
+        anchor = to_anchor(controller, action)
+        puts(file, "    * [#{action}](##{anchor})")
       end)
     end)
     puts(file, "")
   end
 
   defp write_controller(controller, records, file) do
-    puts(file, "## #{to_string(controller)}")
+    puts(file, "## #{controller}")
     Enum.each(records, fn {action, records} ->
       write_action(action, controller, records, file)
     end)
   end
 
   defp write_action(action, controller, records, file) do
-    puts(file, "### #{controller}.#{action}")
+    anchor = to_anchor(controller, action)
+    puts(file, "### <a id=#{anchor}></a>#{action}")
     Enum.each(records, &(write_example(&1, file)))
+  end
+
+  defp write_example({%Phoenix.Socket.Broadcast{topic: topic, payload: payload, event: event} = reply, _}, file) do
+    file
+    |> puts("#### Broadcast")
+    |> puts("* __Topic:__ #{topic}")
+    |> puts("* __Event:__ #{event}")
+
+    if payload != %{} do
+      file
+      |> puts("* __Body:__")
+      |> puts("```json")
+      |> puts("#{format_body_params(payload)}")
+      |> puts("```")
+    end
+  end
+
+  defp write_example({%Phoenix.Socket.Message{topic: topic, payload: payload, event: event} = reply, _}, file) do
+    file
+    |> puts("#### Message")
+    |> puts("* __Topic:__ #{topic}")
+    |> puts("* __Event:__ #{event}")
+
+    if payload != %{} do
+      file
+      |> puts("* __Body:__")
+      |> puts("```json")
+      |> puts("#{format_body_params(payload)}")
+      |> puts("```")
+    end
+  end
+
+  defp write_example({%Phoenix.Socket.Reply{topic: topic, payload: payload, status: status} = reply, _}, file) do
+    file
+    |> puts("#### Reply")
+    |> puts("* __Status:__ #{status}")
+
+    if payload != %{} do
+      file
+      |> puts("* __Body:__")
+      |> puts("```json")
+      |> puts("#{format_body_params(payload)}")
+      |> puts("```")
+    end
   end
 
   defp write_example(record, file) do
@@ -119,16 +164,23 @@ defmodule Bureaucrat.MarkdownWriter do
     end
   end
 
+  defp to_anchor(controller, action), do: to_anchor("#{controller}.#{action}")
   defp to_anchor(name) do
     name
     |> String.downcase
-    |> String.replace(".", "")
+    |> String.replace(".", "-")
   end
 
   defp group_records(records) do
-    by_controller = Enum.group_by(records, &(strip_ns(&1.private.phoenix_controller)))
+    by_controller = Enum.group_by(records, &get_controller/1)
     Enum.map(by_controller, fn {c, recs} ->
-      {c, Enum.group_by(recs, &(&1.private.phoenix_action))}
+      {c, Enum.group_by(recs, &get_action/1)}
     end)
   end
+
+  defp get_controller({_, opts}), do: strip_ns(opts[:module])
+  defp get_controller(conn), do: strip_ns(conn.private.phoenix_controller)
+
+  defp get_action({_, opts}), do: opts[:description]
+  defp get_action(conn), do: conn.private.phoenix_action
 end
