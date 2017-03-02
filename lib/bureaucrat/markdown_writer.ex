@@ -34,7 +34,7 @@ defmodule Bureaucrat.MarkdownWriter do
     Enum.each(records, &(write_example(&1, file)))
   end
 
-  defp write_example({%Phoenix.Socket.Broadcast{topic: topic, payload: payload, event: event} = reply, _}, file) do
+  defp write_example({%Phoenix.Socket.Broadcast{topic: topic, payload: payload, event: event}, _}, file) do
     file
     |> puts("#### Broadcast")
     |> puts("* __Topic:__ #{topic}")
@@ -49,7 +49,7 @@ defmodule Bureaucrat.MarkdownWriter do
     end
   end
 
-  defp write_example({%Phoenix.Socket.Message{topic: topic, payload: payload, event: event} = reply, _}, file) do
+  defp write_example({%Phoenix.Socket.Message{topic: topic, payload: payload, event: event}, _}, file) do
     file
     |> puts("#### Message")
     |> puts("* __Topic:__ #{topic}")
@@ -64,7 +64,7 @@ defmodule Bureaucrat.MarkdownWriter do
     end
   end
 
-  defp write_example({%Phoenix.Socket.Reply{topic: topic, payload: payload, status: status} = reply, _}, file) do
+  defp write_example({%Phoenix.Socket.Reply{payload: payload, status: status}, _}, file) do
     file
     |> puts("#### Reply")
     |> puts("* __Status:__ #{status}")
@@ -168,7 +168,7 @@ defmodule Bureaucrat.MarkdownWriter do
   defp to_anchor(name) do
     name
     |> String.downcase
-    |> String.replace(".", "-")
+    |> String.replace(~r/\W+/, "-")
   end
 
   defp group_records(records) do

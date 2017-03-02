@@ -43,6 +43,8 @@ defmodule Spell.ConnCase do
 end
 ```
 
+To generate Phoenix channel documentation, import the helpers in `test/support/channel_case.ex` alike.
+
 Usage
 -----
 
@@ -83,7 +85,7 @@ Results of `assert_push`, `assert_broadcast` and the underlying `assert_receive`
 To document usage of [Phoenix.ChannelTest](https://hexdocs.pm/phoenix/Phoenix.ChannelTest.html) helpers `push`, `broadcast_from` and `broadcast_from!`, Bureaucrat includes documenting alternatives, prefixed with `doc_`:
   * `doc_push`
   * `doc_broadcast_from`
-  * `doc_broadcast_fron!`
+  * `doc_broadcast_from!`
 
 ```elixir
 test "message:new broadcasts are pushed to the client", %{socket: socket} do

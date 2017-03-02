@@ -1,5 +1,5 @@
 defmodule Bureaucrat.Helpers do
-  alias Phoenix.Socket.{Broadcast, Message, Reply}
+  alias Phoenix.Socket.{Broadcast, Message}
 
   @doc """
   Adds a conn to the generated documentation.
