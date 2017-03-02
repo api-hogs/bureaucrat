@@ -2,11 +2,28 @@ defmodule Bureaucrat.MarkdownWriter do
   def write(records, path) do
     {:ok, file} = File.open path, [:write, :utf8]
     records = group_records(records)
-    puts(file, "# API Documentation\n")
+    write_intro(path, file)
     write_table_of_contents(records, file)
     Enum.each(records, fn {controller, records} ->
       write_controller(controller, records, file)
     end)
+  end
+
+  defp write_intro(path, file) do
+    intro_file_path = [
+      String.replace(path, ~r/\.md$/i, "_INTRO\\0"),  # /path/to/API.md -> /path/to/API_INTRO.md
+      String.replace(path, ~r/\.md$/i, "_intro\\0"),  # /path/to/api.md -> /path/to/api_intro.md
+      "#{path}_INTRO",                                # /path/to/API -> /path/to/API_INTRO
+      "#{path}_intro",                                # /path/to/api -> /path/to/api_intro
+    ] |> Enum.find(nil, &File.exists?/1)              # which one exists?
+
+    if intro_file_path do
+      file
+      |> puts(File.read!(intro_file_path))
+      |> puts("\n\n## Endpoints\n\n")
+    else
+      puts(file, "# API Documentation\n")
+    end
   end
 
   defp write_table_of_contents(records, file) do

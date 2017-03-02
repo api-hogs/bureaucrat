@@ -75,6 +75,16 @@ end
 Then, to generate the documentation file(s) run `DOC=1 mix test`.
 The default output file is `web/controllers/README.md`.
 
+### Custom intro sections
+
+To add a custom intro section, for each output file, bureaucrat will look for an __intro markdown file__ in the output directory,
+named like the output file with a `_intro` or `_INTRO` suffix (before `.md`, if present), e.g.
+
+  * `web/controllers/README` -> `web/controllers/README_INTRO`
+  * `web/controllers/readme.md` -> `web/controllers/readme_intro.md`
+
+Currently only supported by the (default) `Bureaucrat.MarkdownWriter`.
+
 Documenting Phoenix Channels
 ----------------------------
 
