@@ -97,6 +97,72 @@ end
 
 Channels docs output is currently only supported by the `Bureaucrat.MarkdownWriter` and only to the `default_path` (see [Configuration](#configuration) below).
 
+Swagger & Slate Integration
+---------------------------
+
+Bureaucrat comes with the `Bureaucrat.SwaggerSlateMarkdownWriter` backend that will merge test examples with a swagger spec to produce markdown files that can be processed with the [slate](https://github.com/lord/slate) static generator.
+
+To configure swagger integration, first write a swagger file by hand or generate one using [phoenix_swagger](https://github.com/xerions/phoenix_swagger). In the example below, the swagger file exists in the project at `priv/static/swagger.json`.
+
+Clone the slate project into a directory in your project:
+
+```
+git clone --shallow https://github.com/lord/slate doc
+```
+
+Configure Bureaucrat `writer`, `default_path` and `swagger`:
+
+```elixir
+Bureaucrat.start(
+  env_var: "DOC",
+  writer: Bureaucrat.SwaggerSlateMarkdownWriter,
+  default_path: "doc/source/index.html.md",
+  swagger: "priv/static/swagger.json" |> File.read!() |> Poison.decode!())
+```
+
+Within each test, link the test example to a swagger operation by passing an `operation_id` to the `doc` helper:
+
+```elixir
+test "creates and renders resource when data is valid", %{conn: conn} do
+  conn =
+    conn
+    |> post(user_path(conn, :create), user: @valid_attrs)
+    |> doc(operation_id: "create_user")
+
+  assert json_response(conn, 201)["data"]["id"]
+  assert Repo.get_by(User, @valid_attrs)
+end
+```
+
+Now generate documentation with `DOC=1 mix test`.
+
+Use slate to convert the markdown to HTML:
+
+```
+cd doc
+bundle install
+bundle exec middleman build
+```
+
+To serve the documentation directly from your application, copy the slate build output to your `priv/static` directory:
+
+```
+mkdir priv/static/doc
+cp -R doc/build/* priv/static/doc
+```
+
+Whitelist the `doc` directory for static assets in the `Plug.Static` configuration:
+
+```elixir
+plug Plug.Static,
+  at: "/", from: :swagger_demo, gzip: false,
+  only: ~w(css doc fonts images js favicon.ico robots.txt)
+```
+
+Run your application with `mix phoenix.server` and visit `http://localhost:4000/doc/index.html` to see your documentation.
+
+For a full example see the `examples/swagger_demo` project.
+
 Configuration
 -------------
 
