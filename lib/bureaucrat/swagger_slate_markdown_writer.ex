@@ -263,7 +263,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   Uses the vendor extension "x-example" to provide example of each parameter.
   TODO: detailed schema validation rules aren't shown yet (min/max/regex/etc...)
   """
-  def write_parameters(file, _ = %{"parameters" => params}) do
+  def write_parameters(file, _ = %{"parameters" => params}) when map_size(params) > 0 do
     file
     |> puts("#### Parameters\n")
     |> puts("| Parameter   | Description | In |Type      | Required | Default | Example |")
@@ -273,12 +273,17 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
       content =
         ["name", "description", "in", "type", "required", "default", "x-example"]
         |> Enum.map(&(param[&1]))
+        |> Enum.map(&encode_parameter_table_cell/1)
         |> Enum.join("|")
       puts(file, "|#{content}|")
     end
     puts file, ""
   end
   def write_parameters(file, _), do: file
+
+  # Encode parameter table cell values as strings, using Poison to convert lists/maps
+  defp encode_parameter_table_cell(param) when is_map(param) or is_list(param), do: Poison.encode!(param)
+  defp encode_parameter_table_cell(param), do: to_string(param)
 
   @doc """
   Writes the responses table for given swagger operation to file.
