@@ -35,6 +35,7 @@ defmodule Bureaucrat.Recorder do
     conn =
       conn
       |> Plug.Conn.assign(:bureaucrat_desc, opts[:description])
+      |> Plug.Conn.assign(:bureaucrat_file, opts[:file])
       |> Plug.Conn.assign(:bureaucrat_line, opts[:line])
       |> Plug.Conn.assign(:bureaucrat_opts, opts)
 

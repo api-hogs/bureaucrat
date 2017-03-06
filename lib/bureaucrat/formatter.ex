@@ -20,7 +20,7 @@ defmodule Bureaucrat.Formatter do
     writer  = Application.get_env(:bureaucrat, :writer)
     grouped =
       records
-      |> Enum.sort_by(&line_for/1)
+      |> Enum.sort_by(&sort_item_for/1)
       |> group_by_path
 
     Enum.map(grouped, fn {path, recs} ->
@@ -28,8 +28,8 @@ defmodule Bureaucrat.Formatter do
     end)
   end
 
-  defp line_for({_, opts}), do: opts[:line]
-  defp line_for(conn), do: -1 * conn.assigns.bureaucrat_line
+  defp sort_item_for({_, opts}), do: {opts[:file], opts[:line]}
+  defp sort_item_for(conn), do: {conn.assigns.bureaucrat_file, conn.assigns.bureaucrat_line}
 
   defp group_by_path(records) do
     default_path = Application.get_env(:bureaucrat, :default_path)
