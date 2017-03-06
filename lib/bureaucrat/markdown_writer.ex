@@ -189,7 +189,7 @@ defmodule Bureaucrat.MarkdownWriter do
   end
 
   defp group_records(records) do
-    by_controller = Enum.group_by(records, &get_controller/1)
+    by_controller = Bureaucrat.Util.stable_group_by(records, &get_controller/1)
     Enum.map(by_controller, fn {c, recs} ->
       {c, Bureaucrat.Util.stable_group_by(recs, &get_action/1)}
     end)

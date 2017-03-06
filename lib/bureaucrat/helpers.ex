@@ -76,14 +76,18 @@ defmodule Bureaucrat.Helpers do
   end
 
   defmacro doc(conn, opts) when is_list(opts) do
+    # __CALLER__returns a `Macro.Env` struct
+    #   -> https://hexdocs.pm/elixir/Macro.Env.html
     mod  = __CALLER__.module
     fun  = __CALLER__.function |> elem(0) |> to_string
+    file = __CALLER__.file  # full path as binary
     line = __CALLER__.line
 
     opts =
       opts
       |> Keyword.put_new(:description, format_test_name(fun))
       |> Keyword.put(:module, mod)
+      |> Keyword.put(:file, file)
       |> Keyword.put(:line, line)
 
     quote bind_quoted: [conn: conn, opts: opts] do
