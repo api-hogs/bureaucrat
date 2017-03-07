@@ -183,6 +183,7 @@ Bureaucrat.start(
  writer: Bureaucrat.MarkdownWriter,
  default_path: "web/controllers/README.md",
  paths: [],
+ titles: [],
  env_var: "DOC"
 )
 ```
