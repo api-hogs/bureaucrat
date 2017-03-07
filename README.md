@@ -130,4 +130,7 @@ connections.
 For example `[{YourApp.Api.V1, "web/controllers/api/v1/README.md"}]` will
 cause the docs for controllers under `YourApp.Api.V1` namespace to
 be written to `web/controllers/api/v1/README.md`.
+* `:titles`: Allows you to specify explicit titles for some of your modules.
+For example `[{YourApp.Api.V1.UserController, "API /v1/users"}]` will
+change the title (Table of Contents entry and heading) for this controller.
 * `:env_var`: The environment variable used as a flag to trigger doc generation.

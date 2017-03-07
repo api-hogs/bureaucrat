@@ -39,7 +39,8 @@ defmodule Bureaucrat.MarkdownWriter do
   end
 
   defp write_controller(controller, records, file) do
-    puts(file, "## #{controller}")
+    anchor = to_anchor(controller)
+    puts(file, "## <a id=#{anchor}></a>#{controller}")
     Enum.each(records, fn {action, records} ->
       write_action(action, controller, records, file)
     end)
@@ -186,6 +187,8 @@ defmodule Bureaucrat.MarkdownWriter do
     name
     |> String.downcase
     |> String.replace(~r/\W+/, "-")
+    |> String.replace_leading("-", "")
+    |> String.replace_trailing("-", "")
   end
 
   defp group_records(records) do
@@ -195,8 +198,8 @@ defmodule Bureaucrat.MarkdownWriter do
     end)
   end
 
-  defp get_controller({_, opts}), do: strip_ns(opts[:module])
-  defp get_controller(conn), do: strip_ns(conn.private.phoenix_controller)
+  defp get_controller({_, opts}), do: opts[:group_title] || strip_ns(opts[:module])
+  defp get_controller(conn), do: conn.assigns.bureaucrat_opts[:group_title] || strip_ns(conn.private.phoenix_controller)
 
   defp get_action({_, opts}), do: opts[:description]
   defp get_action(conn), do: conn.private.phoenix_action
