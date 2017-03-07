@@ -83,9 +83,12 @@ defmodule Bureaucrat.Helpers do
     file = __CALLER__.file  # full path as binary
     line = __CALLER__.line
 
+    titles = Application.get_env(:bureaucrat, :titles)
+
     opts =
       opts
       |> Keyword.put_new(:description, format_test_name(fun))
+      |> Keyword.put_new(:group_title, group_title_for(mod, titles))
       |> Keyword.put(:module, mod)
       |> Keyword.put(:file, file)
       |> Keyword.put(:line, line)
@@ -97,4 +100,13 @@ defmodule Bureaucrat.Helpers do
   end
 
   def format_test_name("test " <> name), do: name
+
+  def group_title_for(mod, []), do: nil
+  def group_title_for(mod, [{other, path} | paths]) do
+    if String.replace_suffix(to_string(mod), "Test", "") == to_string(other) do
+      path
+    else
+      group_title_for(mod, paths)
+    end
+  end
 end
