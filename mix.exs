@@ -3,7 +3,7 @@ defmodule Bureaucrat.Mixfile do
 
   def project do
     [app: :bureaucrat,
-     version: "0.1.4",
+     version: "0.2.0",
      elixir: "~> 1.0",
      description: "Generate Phoenix API documentation from tests",
      deps: deps(),
@@ -29,14 +29,15 @@ defmodule Bureaucrat.Mixfile do
     [
      {:plug, "~> 1.0"},
      {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0"},
-     {:phoenix, "~> 1.2", optional: true}
+     {:phoenix, "~> 1.2", optional: true},
+     {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end
 
   defp package do
     [
       files: ~w(lib mix.exs README.md UNLICENSE),
-      maintainers: ["Roman Kuznietsov"],
+      maintainers: ["Roman Kuznietsov", "Opak Alex", "Arno Dirlam"],
       licenses: ["Unlicense"],
       links: %{"GitHub" => "https://github.com/api-hogs/bureaucrat"}
     ]
