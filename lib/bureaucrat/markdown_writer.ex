@@ -129,6 +129,7 @@ defmodule Bureaucrat.MarkdownWriter do
     end
 
     file
+    |> puts("")
     |> puts("##### Response")
     |> puts("* __Status__: #{record.status}")
 
