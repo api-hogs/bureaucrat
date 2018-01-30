@@ -263,7 +263,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   Uses the vendor extension "x-example" to provide example of each parameter.
   TODO: detailed schema validation rules aren't shown yet (min/max/regex/etc...)
   """
-  def write_parameters(file, _ = %{"parameters" => params}) when map_size(params) > 0 do
+  def write_parameters(file, _ = %{"parameters" => params}) when length(params) > 0 or map_size(params) > 0 do
     file
     |> puts("#### Parameters\n")
     |> puts("| Parameter   | Description | In |Type      | Required | Default | Example |")
