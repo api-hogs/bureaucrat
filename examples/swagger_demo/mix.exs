@@ -30,13 +30,13 @@ defmodule SwaggerDemo.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [{:phoenix, "~> 1.2.0"},
+    [{:phoenix, "~> 1.3"},
      {:phoenix_pubsub, "~> 1.0"},
      {:phoenix_ecto, "~> 3.0"},
      {:postgrex, ">= 0.0.0"},
      {:gettext, "~> 0.11"},
      {:cowboy, "~> 1.0"},
-     {:phoenix_swagger, "~> 0.4"},
+     {:phoenix_swagger, "~> 0.7"},
      {:bureaucrat, path: "../../"}]
   end
 
@@ -50,6 +50,6 @@ defmodule SwaggerDemo.Mixfile do
     ["ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
      "ecto.reset": ["ecto.drop", "ecto.setup"],
      "test": ["ecto.create --quiet", "ecto.migrate", "test"],
-     "swagger": ["phoenix.swagger.generate priv/static/swagger.json"]]
+     "swagger": ["phx.swagger.generate priv/static/swagger.json -r SwaggerDemo.Router -e SwaggerDemo.Endpoint"]]
   end
 end
