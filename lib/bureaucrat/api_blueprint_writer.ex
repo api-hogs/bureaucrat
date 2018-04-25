@@ -25,20 +25,10 @@ defmodule Bureaucrat.ApiBlueprintWriter do
     test_description = "#{controller} #{action}"
     record_request = Enum.at(records, 0)
     method = record_request.method
-    path_params = record_request.path_params
 
     file |> puts("### #{test_description} [#{method} #{anchor(record_request)}]")
 
-    unless path_params == %{} do
-      file
-      |> puts("\n+ Parameters\n#{formatted_params(path_params)}")
-
-      Enum.each(path_params, fn {param, value} ->
-        puts(file, indent_lines(12, "#{param}: #{value}"))
-      end)
-
-      file
-    end
+    write_parameters(record_request.path_params, file)
 
     Enum.each(records, &write_example(&1, file))
   end
@@ -54,40 +44,61 @@ defmodule Bureaucrat.ApiBlueprintWriter do
     |> puts("\n\n+ Request #{record.assigns.bureaucrat_desc}")
     |> puts("**#{record.method}**&nbsp;&nbsp;`#{path}`\n")
 
-    unless record.req_headers == [] do
-      file
-      |> puts(indent_lines(4, "+ Headers\n"))
-
-      Enum.each(record.req_headers, fn {header, value} ->
-        puts(file, indent_lines(12, "#{header}: #{value}"))
-      end)
-
-      file
-    end
-
-    unless record.body_params == %{} do
-      file
-      |> puts(indent_lines(4, "+ Body\n"))
-      |> puts(indent_lines(12, format_body_params(record.body_params)))
-    end
+    write_request_headers(record.req_headers, file)
+    write_body_params(record.body_params, file)
 
     file
     |> puts("\n+ Response #{record.status}\n")
 
-    unless record.resp_headers == [] do
-      file
-      |> puts(indent_lines(4, "+ Headers\n"))
-
-      Enum.each(record.resp_headers, fn {header, value} ->
-        puts(file, indent_lines(12, "#{header}: #{value}"))
-      end)
-
-      file
-    end
+    write_response_headers(record.resp_headers, file)
 
     file
     |> puts(indent_lines(4, "+ Body\n"))
     |> puts(indent_lines(12, format_resp_body(record.resp_body)))
+  end
+
+  defp write_parameters(_path_params = %{}, _file), do: nil
+
+  defp write_parameters(path_params, file) do
+    file |> puts("\n+ Parameters\n#{formatted_params(path_params)}")
+
+    Enum.each(path_params, fn {param, value} ->
+      puts(file, indent_lines(12, "#{param}: #{value}"))
+    end)
+
+    file
+  end
+
+  defp write_request_headers(_request_headers = [], _file), do: nil
+
+  defp write_request_headers(request_headers, file) do
+    file |> puts(indent_lines(4, "+ Headers\n"))
+
+    Enum.each(request_headers, fn {header, value} ->
+      puts(file, indent_lines(12, "#{header}: #{value}"))
+    end)
+
+    file
+  end
+
+  defp write_body_params(_body_params = %{}, _file), do: nil
+
+  defp write_body_params(body_params, file) do
+    file
+    |> puts(indent_lines(4, "+ Body\n"))
+    |> puts(indent_lines(12, format_body_params(body_params)))
+  end
+
+  defp write_response_headers(_response_headers = [], _file), do: nil
+
+  defp write_response_headers(response_headers, file) do
+    file |> puts(indent_lines(4, "+ Headers\n"))
+
+    Enum.each(response_headers, fn {header, value} ->
+      puts(file, indent_lines(12, "#{header}: #{value}"))
+    end)
+
+    file
   end
 
   def format_body_params(params) do
