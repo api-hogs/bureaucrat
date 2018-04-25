@@ -30,7 +30,8 @@ defmodule Bureaucrat.Mixfile do
      {:plug, "~> 1.0"},
      {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0"},
      {:phoenix, "~> 1.2", optional: true},
-     {:ex_doc, ">= 0.0.0", only: :dev}
+     {:ex_doc, ">= 0.0.0", only: :dev},
+     {:inflex, "~> 1.10.0"}
     ]
   end
 

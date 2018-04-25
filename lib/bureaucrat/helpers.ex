@@ -109,4 +109,12 @@ defmodule Bureaucrat.Helpers do
       group_title_for(mod, paths)
     end
   end
+
+  def plug_doc(conn, module: module, action: action) do
+    controller_name = module |> to_string |> String.trim("Test")
+
+    conn
+    |> Plug.Conn.put_private(:phoenix_controller, controller_name)
+    |> Plug.Conn.put_private(:phoenix_action, action)
+  end
 end
