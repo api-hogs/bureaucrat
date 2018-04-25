@@ -83,7 +83,7 @@ named like the output file with a `_intro` or `_INTRO` suffix (before `.md`, if 
   * `web/controllers/README` -> `web/controllers/README_INTRO`
   * `web/controllers/readme.md` -> `web/controllers/readme_intro.md`
 
-Currently only supported by the (default) `Bureaucrat.MarkdownWriter`.
+Currently the supported writers are the default `Bureaucrat.MarkdownWriter` and `Bureaucrat.ApiBlueprintWriter`.
 
 Documenting Phoenix Channels
 ----------------------------
@@ -173,6 +173,39 @@ Run your application with `mix phoenix.server` and visit `http://localhost:4000/
 
 For a full example see the `examples/swagger_demo` project.
 
+API Blueprint support
+---------------------------
+
+Bureaucrat also supports generating markdown files that are formatted in the [API Blueprint](https://apiblueprint.org/) syntax.
+Simply set the `Bureaucrat.ApiBlueprintWriter` in your configuration file and run the usual:
+
+```
+DOC=1 mix test
+```
+
+After the markdown file has been successfully generated you can use [aglio](https://github.com/danielgtaylor/aglio) to produce the html file:
+
+```
+aglio -i web/controllers/api/v1/documentation.md -o web/controllers/api/v1/documentation.html
+```
+
+### API Blueprint usage note
+If you're piping through custom plugs than can prevent the HTTP requests to land in the controllers (authentication, authorization) and you want to document these cases you'll need the `plug_doc()` helper:
+
+```
+describe "unauthenticated user" do
+  test "GET all items", %{conn: conn} do
+    conn
+    |> get(item_path(conn, :index))
+    |> plug_doc(module: __MODULE__, action: :index)
+    |> doc()
+    |> assert_unauthenticated()
+  end
+end
+```
+
+Without the `plug_doc()` helper Bureaucrat doesn't know the `phoenix_controller` (since the request never landed in the controller) and an error is raised: `** (RuntimeError) GET all items (/api/v1/items) doesn't have required :phoenix_controller key. Have you forgotten to plug_doc()?`
+
 Configuration
 -------------
 
@@ -200,4 +233,5 @@ be written to `web/controllers/api/v1/README.md`.
 * `:titles`: Allows you to specify explicit titles for some of your modules.
 For example `[{YourApp.Api.V1.UserController, "API /v1/users"}]` will
 change the title (Table of Contents entry and heading) for this controller.
+* `:prefix`: Allows you to remove the prefix of the test module names
 * `:env_var`: The environment variable used as a flag to trigger doc generation.

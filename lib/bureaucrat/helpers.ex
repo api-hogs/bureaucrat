@@ -109,4 +109,30 @@ defmodule Bureaucrat.Helpers do
       group_title_for(mod, paths)
     end
   end
+
+  @doc """
+  Helper function for adding the phoenix_controller and phoenix_action keys to
+  the private map of the request that's coming from the test modules.
+
+  For example:
+
+  test "all items - unauthenticated", %{conn: conn} do
+    conn
+    |> get(item_path(conn, :index))
+    |> plug_doc(module: __MODULE__, action: :index)
+    |> doc()
+    |> assert_unauthenticated()
+  end
+
+  The request from this test will never touch the controller that's being tested,
+  because it is being piped through a plug that authenticates the user and redirects
+  to another page. In this scenario, we use the plug_doc function.
+  """
+  def plug_doc(conn, module: module, action: action) do
+    controller_name = module |> to_string |> String.trim("Test")
+
+    conn
+    |> Plug.Conn.put_private(:phoenix_controller, controller_name)
+    |> Plug.Conn.put_private(:phoenix_action, action)
+  end
 end

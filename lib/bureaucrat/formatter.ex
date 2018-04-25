@@ -18,6 +18,7 @@ defmodule Bureaucrat.Formatter do
 
   defp generate_docs do
     records = Bureaucrat.Recorder.get_records
+    validate_records(records)
     writer  = Application.get_env(:bureaucrat, :writer)
     grouped =
       records
@@ -47,5 +48,24 @@ defmodule Bureaucrat.Formatter do
     else
       path_for(record, paths, default_path)
     end
+  end
+
+  defp validate_records(records) do
+    records = Enum.map(records, fn record -> {record, record.private} end)
+
+    Enum.each(records, fn record ->
+      case Map.has_key?(elem(record, 1), :phoenix_controller) do
+        false ->
+          details = elem(record, 0)
+
+          error_message =
+            "#{details.assigns.bureaucrat_desc} (#{details.request_path}) doesn't have required :phoenix_controller key. Have you forgotten to plug_doc()?"
+
+          raise error_message
+
+        _ ->
+          :ok
+      end
+    end)
   end
 end
