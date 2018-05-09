@@ -166,5 +166,6 @@ defmodule Bureaucrat.ApiBlueprintWriter do
     |> Enum.map(fn {controller_name, records} ->
       {controller_name, Enum.group_by(records, & &1.private.phoenix_action)}
     end)
+    |> Enum.sort
   end
 end
