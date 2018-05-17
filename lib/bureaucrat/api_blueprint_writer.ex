@@ -30,31 +30,9 @@ defmodule Bureaucrat.ApiBlueprintWriter do
 
     write_parameters(record_request.path_params, file)
 
-    Enum.each(records, &write_example(&1, file))
-  end
-
-  defp write_example(record, file) do
-    path =
-      case record.query_string do
-        "" -> record.request_path
-        str -> "#{record.request_path}?#{str}"
-      end
-
-    file
-    |> puts("\n\n+ Request #{record.assigns.bureaucrat_desc}")
-    |> puts("**#{record.method}**&nbsp;&nbsp;`#{path}`\n")
-
-    write_request_headers(record.req_headers, file)
-    write_body_params(record.body_params, file)
-
-    file
-    |> puts("\n+ Response #{record.status}\n")
-
-    write_response_headers(record.resp_headers, file)
-
-    file
-    |> puts(indent_lines(4, "+ Body\n"))
-    |> puts(indent_lines(12, format_resp_body(record.resp_body)))
+    records
+    |> sort_by_status_code
+    |> Enum.each(&write_example(&1, file))
   end
 
   defp write_parameters(_path_params = %{}, _file), do: nil
@@ -69,48 +47,78 @@ defmodule Bureaucrat.ApiBlueprintWriter do
     file
   end
 
-  defp write_request_headers(_request_headers = [], _file), do: nil
+  defp sort_by_status_code(records) do
+    records |> Enum.sort_by(& &1.status)
+  end
 
-  defp write_request_headers(request_headers, file) do
+  defp write_example(record, file) do
+    write_request(record, file)
+    write_response(record, file)
+  end
+
+  defp write_request(record, file) do
+    path = get_request_path(record)
+
+    file
+    |> puts("\n\n+ Request #{record.assigns.bureaucrat_desc}")
+    |> puts("**#{record.method}**&nbsp;&nbsp;`#{path}`\n")
+    write_headers(record.req_headers, file)
+    write_request_body(record.body_params, file)
+  end
+
+  defp get_request_path(record) do
+    case record.query_string do
+      "" -> record.request_path
+      str -> "#{record.request_path}?#{str}"
+    end
+  end
+
+  defp write_headers(_headers = [], _file), do: nil
+
+  defp write_headers(headers, file) do
     file |> puts(indent_lines(4, "+ Headers\n"))
 
-    Enum.each(request_headers, fn {header, value} ->
+    Enum.each(headers, fn {header, value} ->
       puts(file, indent_lines(12, "#{header}: #{value}"))
     end)
 
     file
   end
 
-  defp write_body_params(_body_params = %{}, _file), do: nil
+  defp write_request_body(params, file) do
+    case params == %{} do
+      true -> nil
+      false ->
+        file
+        |> puts(indent_lines(4, "+ Body\n"))
+        |> puts(indent_lines(12, format_request_body(params)))
+    end
+  end
 
-  defp write_body_params(body_params, file) do
+  defp write_response(record, file) do
+    file |> puts("\n+ Response #{record.status}\n")
+    write_headers(record.resp_headers, file)
+    write_response_body(record.resp_body, file)
+  end
+
+  defp write_response_body(_params = %{}, _file), do: nil
+
+  defp write_response_body(params, file) do
     file
     |> puts(indent_lines(4, "+ Body\n"))
-    |> puts(indent_lines(12, format_body_params(body_params)))
+    |> puts(indent_lines(12, format_response_body(params)))
   end
 
-  defp write_response_headers(_response_headers = [], _file), do: nil
-
-  defp write_response_headers(response_headers, file) do
-    file |> puts(indent_lines(4, "+ Headers\n"))
-
-    Enum.each(response_headers, fn {header, value} ->
-      puts(file, indent_lines(12, "#{header}: #{value}"))
-    end)
-
-    file
-  end
-
-  def format_body_params(params) do
+  def format_request_body(params) do
     {:ok, json} = Poison.encode(params, pretty: true)
     json
   end
 
-  defp format_resp_body("") do
+  defp format_response_body("") do
     ""
   end
 
-  defp format_resp_body(string) do
+  defp format_response_body(string) do
     {:ok, struct} = Poison.decode(string)
     {:ok, json} = Poison.encode(struct, pretty: true)
     json
