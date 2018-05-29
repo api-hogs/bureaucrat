@@ -17,9 +17,10 @@ defmodule Bureaucrat.Formatter do
   end
 
   defp generate_docs do
-    records = Bureaucrat.Recorder.get_records
+    records = Bureaucrat.Recorder.get_records()
     validate_records(records)
-    writer  = Application.get_env(:bureaucrat, :writer)
+    writer = Application.get_env(:bureaucrat, :writer)
+
     grouped =
       records
       |> Enum.sort_by(&sort_item_for/1)
@@ -36,13 +37,14 @@ defmodule Bureaucrat.Formatter do
   defp group_by_path(records) do
     default_path = Application.get_env(:bureaucrat, :default_path)
     paths = Application.get_env(:bureaucrat, :paths)
-    Enum.group_by(records, &(path_for(&1, paths, default_path)))
+    Enum.group_by(records, &path_for(&1, paths, default_path))
   end
 
   defp path_for({_, _}, _, default_path), do: default_path
   defp path_for(_record, [], default_path), do: default_path
   defp path_for(record, [{prefix, path} | paths], default_path) do
     module = record.private.phoenix_controller
+
     if String.starts_with?(to_string(module), to_string(prefix)) do
       path
     else
@@ -51,21 +53,21 @@ defmodule Bureaucrat.Formatter do
   end
 
   defp validate_records(records) do
-    records = Enum.map(records, fn record -> {record, record.private} end)
+    Enum.each(records, &validate_record/1)
+  end
 
-    Enum.each(records, fn record ->
-      case Map.has_key?(elem(record, 1), :phoenix_controller) do
-        false ->
-          details = elem(record, 0)
+  defp validate_record(%Plug.Conn{private: private} = conn) do
+    if Map.has_key?(private, :phoenix_controller) do
+      :ok
+    else
+      error_message =
+        "#{conn.assigns.bureaucrat_desc} (#{conn.request_path}) doesn't have required :phoenix_controller key. Have you forgotten to plug_doc()?"
 
-          error_message =
-            "#{details.assigns.bureaucrat_desc} (#{details.request_path}) doesn't have required :phoenix_controller key. Have you forgotten to plug_doc()?"
+      raise error_message
+    end
+  end
 
-          raise error_message
-
-        _ ->
-          :ok
-      end
-    end)
+  defp validate_record(_) do
+    :ok
   end
 end
