@@ -198,7 +198,7 @@ defmodule Bureaucrat.MarkdownWriter do
     end)
   end
 
-  defp get_controller({_, opts}), do: opts[:group_title] || strip_ns(opts[:module])
+  defp get_controller({_, opts}), do: opts[:group_title] || String.replace_suffix(strip_ns(opts[:module]), "Test", "")
   defp get_controller(conn), do: conn.assigns.bureaucrat_opts[:group_title] || strip_ns(conn.private.phoenix_controller)
 
   defp get_action({_, opts}), do: opts[:description]
