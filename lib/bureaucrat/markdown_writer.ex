@@ -95,7 +95,7 @@ defmodule Bureaucrat.MarkdownWriter do
     end
   end
 
-  defp write_example({status, payload, %Phoenix.Socket{} = socket}, file) do
+  defp write_example({{status, payload, %Phoenix.Socket{} = socket}, _}, file) do
     file
     |> puts("#### Join")
     |> puts("* __Topic:__ #{socket.topic}")
