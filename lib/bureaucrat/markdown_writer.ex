@@ -99,8 +99,7 @@ defmodule Bureaucrat.MarkdownWriter do
     file
     |> puts("#### Join")
     |> puts("* __Topic:__ #{socket.topic}")
-    |> puts("* __Event:__ receive")
-    |> puts("* __Status:__ #{status}")
+    |> puts("* __Receive:__ #{status}")
 
     if payload != %{} do
       file
