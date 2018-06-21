@@ -12,7 +12,7 @@ First, add Bureaucrat to your `mix.exs` dependencies:
 
 ```elixir
 defp deps do
-  [{:bureaucrat, "~> 0.2.3"}]
+  [{:bureaucrat, "~> 0.2.4"}]
 end
 ```
 
