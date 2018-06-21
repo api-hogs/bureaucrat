@@ -1,6 +1,7 @@
 defmodule Bureaucrat.Recorder do
   use GenServer
 
+  alias Phoenix.Socket
   alias Phoenix.Socket.{Broadcast, Message, Reply}
 
   def start_link do
@@ -17,6 +18,10 @@ defmodule Bureaucrat.Recorder do
 
   def doc(%Reply{} = reply, opts) do
     GenServer.cast(__MODULE__, {:channel_doc, reply, opts})
+  end
+
+  def doc({_, _, %Socket{}} = join_socket, opts) do
+    GenServer.cast(__MODULE__, {:channel_doc, join_socket, opts})
   end
 
   def doc(conn, opts) do
