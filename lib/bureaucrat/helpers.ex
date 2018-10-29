@@ -101,7 +101,7 @@ defmodule Bureaucrat.Helpers do
 
   def format_test_name("test " <> name), do: name
 
-  def group_title_for(mod, []), do: nil
+  def group_title_for(_mod, []), do: nil
   def group_title_for(mod, [{other, path} | paths]) do
     if String.replace_suffix(to_string(mod), "Test", "") == to_string(other) do
       path

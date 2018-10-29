@@ -129,7 +129,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   """
   def write_model_properties(file, swagger, model_schema, prefix \\ "") do
     {objects, primitives} = model_schema["properties"]
-      |> Enum.partition(fn {_key, schema} -> schema["type"] == "object" end)
+      |> Enum.split_with(fn {_key, schema} -> schema["type"] == "object" end)
 
     ordered = Enum.concat(primitives, objects)
 
