@@ -1,4 +1,6 @@
 defmodule Bureaucrat.ApiBlueprintWriter do
+  alias Bureaucrat.JSON
+
   def write(records, path) do
     file = File.open!(path, [:write, :utf8])
     records = group_records(records)
@@ -110,7 +112,7 @@ defmodule Bureaucrat.ApiBlueprintWriter do
   end
 
   def format_request_body(params) do
-    {:ok, json} = Poison.encode(params, pretty: true)
+    {:ok, json} = JSON.encode(params, pretty: true)
     json
   end
 
@@ -119,8 +121,8 @@ defmodule Bureaucrat.ApiBlueprintWriter do
   end
 
   defp format_response_body(string) do
-    {:ok, struct} = Poison.decode(string)
-    {:ok, json} = Poison.encode(struct, pretty: true)
+    {:ok, struct} = JSON.decode(string)
+    {:ok, json} = JSON.encode(struct, pretty: true)
     json
   end
 
