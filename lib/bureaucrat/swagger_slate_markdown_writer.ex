@@ -5,6 +5,7 @@ It requires that the decoded swagger data be available via Application.get_env(:
 eg by passing it as an option to the Bureaucrat.start/1 function.
 """
 
+  alias Bureaucrat.JSON
   alias Plug.Conn
 
   # pipeline-able puts
@@ -112,7 +113,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   end
 
   def write_model_example(file, %{"example" => example}) do
-    json = Poison.encode!(example, pretty: true)
+    json = JSON.encode!(example, pretty: true)
     file
     |> puts("\n```json")
     |> puts(json)
@@ -281,8 +282,8 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   end
   def write_parameters(file, _), do: file
 
-  # Encode parameter table cell values as strings, using Poison to convert lists/maps
-  defp encode_parameter_table_cell(param) when is_map(param) or is_list(param), do: Poison.encode!(param)
+  # Encode parameter table cell values as strings, using json library to convert lists/maps
+  defp encode_parameter_table_cell(param) when is_map(param) or is_list(param), do: JSON.encode!(param)
   defp encode_parameter_table_cell(param), do: to_string(param)
 
   @doc """
@@ -326,7 +327,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     unless record.body_params == %{} do
       file
       |> puts("```json")
-      |> puts("#{Poison.encode!(record.body_params, pretty: true)}")
+      |> puts("#{JSON.encode!(record.body_params, pretty: true)}")
       |> puts("```\n")
     end
 
@@ -361,7 +362,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   def format_resp_body(string) do
     case string do
       "" -> ""
-      _ -> string |> Poison.decode! |> Poison.encode!(pretty: true)
+      _ -> string |> JSON.decode!() |> JSON.encode!(pretty: true)
     end
   end
 end

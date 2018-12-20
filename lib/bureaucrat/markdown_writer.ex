@@ -1,4 +1,6 @@
 defmodule Bureaucrat.MarkdownWriter do
+  alias Bureaucrat.JSON
+
   def write(records, path) do
     {:ok, file} = File.open path, [:write, :utf8]
     records = group_records(records)
@@ -172,7 +174,7 @@ defmodule Bureaucrat.MarkdownWriter do
   end
 
   def format_body_params(params) do
-    {:ok, json} = Poison.encode(params, pretty: true)
+    {:ok, json} = JSON.encode(params, pretty: true)
     json
   end
 
@@ -181,8 +183,8 @@ defmodule Bureaucrat.MarkdownWriter do
   end
 
   defp format_resp_body(string) do
-    {:ok, struct} = Poison.decode(string)
-    {:ok, json} = Poison.encode(struct, pretty: true)
+    {:ok, struct} = JSON.decode(string)
+    {:ok, json} = JSON.encode(struct, pretty: true)
     json
   end
 

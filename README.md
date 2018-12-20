@@ -16,6 +16,17 @@ defp deps do
 end
 ```
 
+Bureaucrat needs a json library and defaults to Poison. It must be added as a dependency:
+
+```elixir
+defp deps do
+  [
+    {:bureaucrat, "~> 0.2.4"},
+    {:poison, "~> 3.0"}
+  ]
+end
+```
+
 Then, update your dependencies:
 
 ```
@@ -217,7 +228,8 @@ Bureaucrat.start(
  default_path: "web/controllers/README.md",
  paths: [],
  titles: [],
- env_var: "DOC"
+ env_var: "DOC",
+ json_library: Poison
 )
 ```
 
@@ -235,3 +247,4 @@ For example `[{YourApp.Api.V1.UserController, "API /v1/users"}]` will
 change the title (Table of Contents entry and heading) for this controller.
 * `:prefix`: Allows you to remove the prefix of the test module names
 * `:env_var`: The environment variable used as a flag to trigger doc generation.
+* `:json_library`: The JSON library to use. Poison (the default) and Jason both work.
