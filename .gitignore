@@ -3,3 +3,6 @@
 erl_crash.dump
 *.ez
 /doc
+.idea
+bureaucrat.iml
+examples/swagger_demo/swagger_demo.iml

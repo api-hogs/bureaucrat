@@ -64,6 +64,7 @@ defmodule Bureaucrat.ApiBlueprintWriter do
     file
     |> puts("\n\n+ Request #{record.assigns.bureaucrat_desc}")
     |> puts("**#{record.method}**&nbsp;&nbsp;`#{path}`\n")
+
     write_headers(record.req_headers, file)
     write_request_body(record.body_params, file)
   end
@@ -89,7 +90,9 @@ defmodule Bureaucrat.ApiBlueprintWriter do
 
   defp write_request_body(params, file) do
     case params == %{} do
-      true -> nil
+      true ->
+        nil
+
       false ->
         file
         |> puts(indent_lines(4, "+ Body\n"))
@@ -176,6 +179,6 @@ defmodule Bureaucrat.ApiBlueprintWriter do
     |> Enum.map(fn {controller_name, records} ->
       {controller_name, Enum.group_by(records, & &1.private.phoenix_action)}
     end)
-    |> Enum.sort
+    |> Enum.sort()
   end
 end
