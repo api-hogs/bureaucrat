@@ -5,7 +5,7 @@ defmodule Bureaucrat do
     import Supervisor.Spec
 
     children = [
-      worker(Bureaucrat.Recorder, []),
+      worker(Bureaucrat.Recorder, [])
     ]
 
     opts = [strategy: :one_for_one, name: Bureaucrat.Supervisor]
@@ -19,8 +19,8 @@ defmodule Bureaucrat do
   end
 
   defp configure(options) do
-    Enum.each options, fn {k, v} ->
+    Enum.each(options, fn {k, v} ->
       Application.put_env(:bureaucrat, k, v)
-    end
+    end)
   end
 end

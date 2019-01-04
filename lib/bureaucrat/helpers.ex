@@ -26,6 +26,7 @@ defmodule Bureaucrat.Helpers do
       ref
     end
   end
+
   defmacro doc_push(socket, event, payload) do
     quote bind_quoted: [socket: socket, event: event, payload: payload] do
       ref = make_ref()
@@ -41,7 +42,7 @@ defmodule Bureaucrat.Helpers do
       %{pubsub_server: pubsub_server, topic: topic, transport_pid: transport_pid} = socket
       broadcast = %Broadcast{topic: topic, event: event, payload: message}
       doc(broadcast, [])
-      Phoenix.Channel.Server.broadcast_from pubsub_server, transport_pid, topic, event, message
+      Phoenix.Channel.Server.broadcast_from(pubsub_server, transport_pid, topic, event, message)
     end
   end
 
@@ -50,7 +51,7 @@ defmodule Bureaucrat.Helpers do
       %{pubsub_server: pubsub_server, topic: topic, transport_pid: transport_pid} = socket
       broadcast = %Broadcast{topic: topic, event: event, payload: message}
       doc(broadcast, [])
-      Phoenix.Channel.Server.broadcast_from! pubsub_server, transport_pid, topic, event, message
+      Phoenix.Channel.Server.broadcast_from!(pubsub_server, transport_pid, topic, event, message)
     end
   end
 
@@ -69,7 +70,7 @@ defmodule Bureaucrat.Helpers do
         |> get("/api/v1/products")
         |> doc(description: "List all products", operation_id: "list_products")
   """
-  defmacro doc(conn, desc) when is_binary(desc)  do
+  defmacro doc(conn, desc) when is_binary(desc) do
     quote bind_quoted: [conn: conn, desc: desc] do
       doc(conn, description: desc)
     end
@@ -78,9 +79,10 @@ defmodule Bureaucrat.Helpers do
   defmacro doc(conn, opts) when is_list(opts) do
     # __CALLER__returns a `Macro.Env` struct
     #   -> https://hexdocs.pm/elixir/Macro.Env.html
-    mod  = __CALLER__.module
-    fun  = __CALLER__.function |> elem(0) |> to_string
-    file = __CALLER__.file  # full path as binary
+    mod = __CALLER__.module
+    fun = __CALLER__.function |> elem(0) |> to_string
+    # full path as binary
+    file = __CALLER__.file
     line = __CALLER__.line
 
     titles = Application.get_env(:bureaucrat, :titles)
@@ -102,6 +104,7 @@ defmodule Bureaucrat.Helpers do
   def format_test_name("test " <> name), do: name
 
   def group_title_for(_mod, []), do: nil
+
   def group_title_for(mod, [{other, path} | paths]) do
     if String.replace_suffix(to_string(mod), "Test", "") == to_string(other) do
       path

@@ -21,6 +21,7 @@ defmodule Bureaucrat.Util do
         # key matches previous key -> add value to previous list
         [{^key, values} | tail] ->
           [{key, [value | values]} | tail]
+
         # otherwise -> start a new list with this value
         _ ->
           [{key, [value]} | categories]

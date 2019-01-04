@@ -2,22 +2,30 @@ defmodule Bureaucrat.MarkdownWriter do
   alias Bureaucrat.JSON
 
   def write(records, path) do
-    {:ok, file} = File.open path, [:write, :utf8]
+    {:ok, file} = File.open(path, [:write, :utf8])
     records = group_records(records)
     write_intro(path, file)
     write_table_of_contents(records, file)
+
     Enum.each(records, fn {controller, records} ->
       write_controller(controller, records, file)
     end)
   end
 
   defp write_intro(path, file) do
-    intro_file_path = [
-      String.replace(path, ~r/\.md$/i, "_INTRO\\0"),  # /path/to/API.md -> /path/to/API_INTRO.md
-      String.replace(path, ~r/\.md$/i, "_intro\\0"),  # /path/to/api.md -> /path/to/api_intro.md
-      "#{path}_INTRO",                                # /path/to/API -> /path/to/API_INTRO
-      "#{path}_intro",                                # /path/to/api -> /path/to/api_intro
-    ] |> Enum.find(nil, &File.exists?/1)              # which one exists?
+    intro_file_path =
+      [
+        # /path/to/API.md -> /path/to/API_INTRO.md
+        String.replace(path, ~r/\.md$/i, "_INTRO\\0"),
+        # /path/to/api.md -> /path/to/api_intro.md
+        String.replace(path, ~r/\.md$/i, "_intro\\0"),
+        # /path/to/API -> /path/to/API_INTRO
+        "#{path}_INTRO",
+        # /path/to/api -> /path/to/api_intro
+        "#{path}_intro"
+      ]
+      # which one exists?
+      |> Enum.find(nil, &File.exists?/1)
 
     if intro_file_path do
       file
@@ -32,16 +40,19 @@ defmodule Bureaucrat.MarkdownWriter do
     Enum.each(records, fn {controller, actions} ->
       anchor = to_anchor(controller)
       puts(file, "  * [#{controller}](##{anchor})")
+
       Enum.each(actions, fn {action, _} ->
         anchor = to_anchor(controller, action)
         puts(file, "    * [#{action}](##{anchor})")
       end)
     end)
+
     puts(file, "")
   end
 
   defp write_controller(controller, records, file) do
     puts(file, "## #{controller}")
+
     Enum.each(records, fn {action, records} ->
       write_action(action, controller, records, file)
     end)
@@ -50,7 +61,7 @@ defmodule Bureaucrat.MarkdownWriter do
   defp write_action(action, controller, records, file) do
     anchor = to_anchor(controller, action)
     puts(file, "### <a id=#{anchor}></a>#{action}")
-    Enum.each(records, &(write_example(&1, file)))
+    Enum.each(records, &write_example(&1, file))
   end
 
   defp write_example({%Phoenix.Socket.Broadcast{topic: topic, payload: payload, event: event}, _}, file) do
@@ -130,9 +141,9 @@ defmodule Bureaucrat.MarkdownWriter do
       |> puts("* __Request headers:__")
       |> puts("```")
 
-      Enum.each record.req_headers, fn({header, value}) ->
-        puts file, "#{header}: #{value}"
-      end
+      Enum.each(record.req_headers, fn {header, value} ->
+        puts(file, "#{header}: #{value}")
+      end)
 
       file
       |> puts("```")
@@ -151,15 +162,14 @@ defmodule Bureaucrat.MarkdownWriter do
     |> puts("##### Response")
     |> puts("* __Status__: #{record.status}")
 
-
     unless record.resp_headers == [] do
       file
       |> puts("* __Response headers:__")
       |> puts("```")
 
-      Enum.each record.resp_headers, fn({header, value}) ->
-        puts file, "#{header}: #{value}"
-      end
+      Enum.each(record.resp_headers, fn {header, value} ->
+        puts(file, "#{header}: #{value}")
+      end)
 
       file
       |> puts("```")
@@ -201,9 +211,10 @@ defmodule Bureaucrat.MarkdownWriter do
   end
 
   defp to_anchor(controller, action), do: to_anchor("#{controller}.#{action}")
+
   defp to_anchor(name) do
     name
-    |> String.downcase
+    |> String.downcase()
     |> String.replace(~r/\W+/, "-")
     |> String.replace_leading("-", "")
     |> String.replace_trailing("-", "")
@@ -211,6 +222,7 @@ defmodule Bureaucrat.MarkdownWriter do
 
   defp group_records(records) do
     by_controller = Bureaucrat.Util.stable_group_by(records, &get_controller/1)
+
     Enum.map(by_controller, fn {c, recs} ->
       {c, Bureaucrat.Util.stable_group_by(recs, &get_action/1)}
     end)

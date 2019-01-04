@@ -2,19 +2,22 @@ defmodule Bureaucrat.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :bureaucrat,
-     version: "0.2.4",
-     elixir: "~> 1.6",
-     description: "Generate Phoenix API documentation from tests",
-     deps: deps(),
-     package: package()]
+    [
+      app: :bureaucrat,
+      version: "0.2.5",
+      elixir: "~> 1.6 or ~> 1.7",
+      description: "Generate Phoenix API documentation from tests",
+      deps: deps(),
+      package: package()
+    ]
   end
 
   # Configuration for the OTP application
   #
   # Type `mix help compile.app` for more information
   def application do
-    [registered: [Bureaucrat.Recorder],
+    [
+      registered: [Bureaucrat.Recorder],
       mod: {Bureaucrat, []},
       env: [
         writer: Bureaucrat.MarkdownWriter,
@@ -22,16 +25,17 @@ defmodule Bureaucrat.Mixfile do
         paths: [],
         titles: [],
         env_var: "DOC"
-      ]]
+      ]
+    ]
   end
 
   defp deps do
     [
-     {:plug, ">= 1.0.0"},
-     {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0", optional: true},
-     {:phoenix, ">= 1.2.0", optional: true},
-     {:ex_doc, ">= 0.0.0", only: :dev},
-     {:inflex, ">= 1.10.0"}
+      {:plug, ">= 1.0.0"},
+      {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0 or ~> 4.0", optional: true},
+      {:phoenix, ">= 1.2.0", optional: true},
+      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:inflex, ">= 1.10.0"}
     ]
   end
 

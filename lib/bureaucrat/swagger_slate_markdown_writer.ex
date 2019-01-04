@@ -1,9 +1,9 @@
 defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
-@moduledoc """
-This markdown writer integrates swagger information and outputs in a slate-friendly markdown format.
-It requires that the decoded swagger data be available via Application.get_env(:bureaucrat, :swagger),
-eg by passing it as an option to the Bureaucrat.start/1 function.
-"""
+  @moduledoc """
+  This markdown writer integrates swagger information and outputs in a slate-friendly markdown format.
+  It requires that the decoded swagger data be available via Application.get_env(:bureaucrat, :swagger),
+  eg by passing it as an option to the Bureaucrat.start/1 function.
+  """
 
   alias Bureaucrat.JSON
   alias Plug.Conn
@@ -21,7 +21,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
    and the private.phoenix_controller, private.phoenix_action values set for linking to swagger.
   """
   def write(records, path) do
-    {:ok, file} = File.open path, [:write, :utf8]
+    {:ok, file} = File.open(path, [:write, :utf8])
     swagger = Application.get_env(:bureaucrat, :swagger)
 
     file
@@ -30,11 +30,11 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     |> write_models(swagger)
 
     records
-      |> tag_records(swagger)
-      |> group_records()
-      |> Enum.each(fn {tag, records_by_operation_id} ->
-           write_operations_for_tag(file, tag, records_by_operation_id, swagger)
-         end)
+    |> tag_records(swagger)
+    |> group_records()
+    |> Enum.each(fn {tag, records_by_operation_id} ->
+      write_operations_for_tag(file, tag, records_by_operation_id, swagger)
+    end)
   end
 
   @doc """
@@ -44,6 +44,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   """
   def write_overview(file, swagger) do
     info = swagger["info"]
+
     file
     |> puts("""
     ---
@@ -68,15 +69,18 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     |> puts("# Authentication\n")
 
     # TODO: Document token based security
-    Enum.each security, fn securityRequirement ->
-       name = Map.keys(securityRequirement) |> List.first
-       definition = swagger["securityDefinitions"][name]
-       file
-       |> puts("## #{definition["type"]}\n")
-       |> puts("#{definition["description"]}\n")
-     end
-     file
+    Enum.each(security, fn securityRequirement ->
+      name = Map.keys(securityRequirement) |> List.first()
+      definition = swagger["securityDefinitions"][name]
+
+      file
+      |> puts("## #{definition["type"]}\n")
+      |> puts("#{definition["description"]}\n")
+    end)
+
+    file
   end
+
   def write_authentication(file, _), do: file
 
   @doc """
@@ -88,9 +92,11 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   """
   def write_models(file, swagger) do
     puts(file, "# Models\n")
-    Enum.each swagger["definitions"], fn definition ->
+
+    Enum.each(swagger["definitions"], fn definition ->
       write_model(file, swagger, definition)
-    end
+    end)
+
     file
   end
 
@@ -101,7 +107,6 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   The example json is output before the table just so slate will align them.
   """
   def write_model(file, swagger, {name, model_schema}) do
-
     file
     |> puts("## #{name}\n")
     |> puts("#{model_schema["description"]}")
@@ -114,11 +119,13 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
 
   def write_model_example(file, %{"example" => example}) do
     json = JSON.encode!(example, pretty: true)
+
     file
     |> puts("\n```json")
     |> puts(json)
     |> puts("```\n")
   end
+
   def write_model_example(file, _) do
     puts(file, "")
   end
@@ -129,16 +136,18 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   prefix is output before each property name to enable nested objects to be flattened.
   """
   def write_model_properties(file, swagger, model_schema, prefix \\ "") do
-    {objects, primitives} = model_schema["properties"]
+    {objects, primitives} =
+      model_schema["properties"]
       |> Enum.split_with(fn {_key, schema} -> schema["type"] == "object" end)
 
     ordered = Enum.concat(primitives, objects)
 
-    Enum.each ordered, fn {property, property_details} ->
+    Enum.each(ordered, fn {property, property_details} ->
       {property_details, type} = resolve_type(swagger, property_details)
       required? = is_required(property, model_schema)
       write_model_property(file, swagger, "#{prefix}#{property}", property_details, type, required?)
-    end
+    end)
+
     file
   end
 
@@ -148,6 +157,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     type = schema_ref_to_link(schema_ref)
     {property_details, type}
   end
+
   def resolve_type(_swagger, property_details) do
     {property_details, property_details["type"]}
   end
@@ -159,7 +169,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   def write_model_property(file, swagger, property, property_details, "array", required?) do
     schema = property_details["items"]
 
-    #TODO: handle arrays with inline schema
+    # TODO: handle arrays with inline schema
     schema_ref = if schema != nil, do: schema["$ref"], else: nil
     type = if schema_ref != nil, do: "array(#{schema_ref_to_link(schema_ref)})", else: "array(any)"
     write_model_property(file, swagger, property, property_details, type, required?)
@@ -184,12 +194,12 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     tags_by_operation_id =
       for {_path, actions} <- swagger["paths"],
           {_action, details} <- actions do
-        [first_tag|_] = details["tags"]
+        [first_tag | _] = details["tags"]
         {details["operationId"], first_tag}
       end
       |> Enum.into(%{})
 
-    Enum.map(records, &(tag_record(&1, tags_by_operation_id)))
+    Enum.map(records, &tag_record(&1, tags_by_operation_id))
   end
 
   @doc """
@@ -204,11 +214,12 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   Group a list of tagged records, first by tag, then by operation_id.
   """
   def group_records(records) do
-    by_tag = Enum.group_by(records, &(&1.private.swagger_tag))
-    Enum.map by_tag, fn {tag, records_with_tag} ->
-      by_operation_id = Enum.group_by(records_with_tag, &(&1.assigns.bureaucrat_opts[:operation_id]))
+    by_tag = Enum.group_by(records, & &1.private.swagger_tag)
+
+    Enum.map(by_tag, fn {tag, records_with_tag} ->
+      by_operation_id = Enum.group_by(records_with_tag, & &1.assigns.bureaucrat_opts[:operation_id])
       {tag, by_operation_id}
-    end
+    end)
   end
 
   @doc """
@@ -224,9 +235,10 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     |> puts("# #{tag}\n")
     |> puts("#{tag_details["description"]}\n")
 
-    Enum.each records_by_operation_id, fn {operation_id, records} ->
+    Enum.each(records_by_operation_id, fn {operation_id, records} ->
       write_action(file, operation_id, records, swagger)
-    end
+    end)
+
     file
   end
 
@@ -238,7 +250,7 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     puts(file, "## #{details["summary"]}\n")
 
     # write examples before params/schemas to get correct alignment in slate
-    Enum.each(records, &(write_example(file, &1)))
+    Enum.each(records, &write_example(file, &1))
 
     file
     |> puts("#{details["description"]}\n")
@@ -270,16 +282,19 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     |> puts("| Parameter   | Description | In |Type      | Required | Default | Example |")
     |> puts("|-------------|-------------|----|----------|----------|---------|---------|")
 
-    Enum.each params, fn param ->
+    Enum.each(params, fn param ->
       content =
         ["name", "description", "in", "type", "required", "default", "x-example"]
-        |> Enum.map(&(param[&1]))
+        |> Enum.map(&param[&1])
         |> Enum.map(&encode_parameter_table_cell/1)
         |> Enum.join("|")
+
       puts(file, "|#{content}|")
-    end
-    puts file, ""
+    end)
+
+    puts(file, "")
   end
+
   def write_parameters(file, _), do: file
 
   # Encode parameter table cell values as strings, using json library to convert lists/maps
@@ -299,21 +314,22 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
     |> puts("| Status | Description | Schema |")
     |> puts("|--------|-------------|--------|")
 
-    Enum.each swagger_operation["responses"], fn {status, response} ->
-      ref = get_in response, ["schema", "$ref"]
+    Enum.each(swagger_operation["responses"], fn {status, response} ->
+      ref = get_in(response, ["schema", "$ref"])
       schema = if ref, do: schema_ref_to_link(ref), else: ""
       puts(file, "|#{status} | #{response["description"]} | #{schema}|")
-    end
+    end)
   end
 
   @doc """
   Writes a single request/response example to file
   """
   def write_example(file, record) do
-    path = case record.query_string do
-      "" -> record.request_path
-      str -> "#{record.request_path}?#{str}"
-    end
+    path =
+      case record.query_string do
+        "" -> record.request_path
+        str -> "#{record.request_path}?#{str}"
+      end
 
     # Request with path and headers
     file
@@ -350,9 +366,10 @@ eg by passing it as an option to the Bureaucrat.start/1 function.
   Write the list of request/response headers
   """
   def write_headers(file, headers) do
-    Enum.each headers, fn {header, value} ->
-      puts file, "#{header}: #{value}"
-    end
+    Enum.each(headers, fn {header, value} ->
+      puts(file, "#{header}: #{value}")
+    end)
+
     file
   end
 

@@ -42,6 +42,7 @@ defmodule Bureaucrat.Formatter do
 
   defp path_for({_, _}, _, default_path), do: default_path
   defp path_for(_record, [], default_path), do: default_path
+
   defp path_for(record, [{prefix, path} | paths], default_path) do
     module = record.private.phoenix_controller
 
