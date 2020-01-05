@@ -33,7 +33,7 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
     |> tag_records(swagger)
     |> group_records()
     |> Enum.each(fn {tag, records_by_operation_id} ->
-      write_operations_for_tag(file, swagger, tag, records_by_operation_id, swagger)
+      write_operations_for_tag(file, tag, records_by_operation_id, swagger)
     end)
   end
 
@@ -228,7 +228,7 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
   tag roughly corresponds to a phoenix controller, eg "Users"
   records_by_operation_id are the examples collected during tests, grouped by operationId (Controller.action)
   """
-  def write_operations_for_tag(file, swagger, tag, records_by_operation_id, swagger) do
+  def write_operations_for_tag(file, tag, records_by_operation_id, swagger) do
     tag_details = swagger["tags"] |> Enum.find(&(&1["name"] == tag))
 
     file
@@ -236,7 +236,7 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
     |> puts("#{tag_details["description"]}\n")
 
     Enum.each(records_by_operation_id, fn {operation_id, records} ->
-      write_action(file, swagger, operation_id, records, swagger)
+      write_action(file, operation_id, records, swagger)
     end)
 
     file
@@ -245,7 +245,7 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
   @doc """
   Writes all examples of a given operation (Controller action) to file.
   """
-  def write_action(file, swagger, operation_id, records, swagger) do
+  def write_action(file, operation_id, records, swagger) do
     details = find_operation_by_id(swagger, operation_id)
     puts(file, "## #{details["summary"]}\n")
 
