@@ -75,15 +75,15 @@ content-type: multipart/mixed; boundary=plug_conn_test
 201
 content-type: application/json; charset=utf-8
 cache-control: max-age=0, private, must-revalidate
-x-request-id: adki4ojsptrs5g02fuuoqsq7iimil7st
-location: /api/users/220
+x-request-id: f2crr3o17d28b3icr42d11e2bfuut1r7
+location: /api/users/89
 ```
 
 ```json
 {
   "data": {
     "name": "some content",
-    "id": 220,
+    "id": 89,
     "email": "some content"
   }
 }
@@ -109,7 +109,7 @@ content-type: multipart/mixed; boundary=plug_conn_test
 422
 content-type: application/json; charset=utf-8
 cache-control: max-age=0, private, must-revalidate
-x-request-id: 69pc37isf4siphg2b9feb1au6qu257c8
+x-request-id: l4tj1lk1ma7vpsj0pllomd00hpa6bbuu
 ```
 
 ```json
@@ -131,7 +131,7 @@ Creates a new user
 
 | Parameter   | Description | In |Type      | Required | Default | Example |
 |-------------|-------------|----|----------|----------|---------|---------|
-|user|The user details|body||false||{"user":{"name":"Joe","email":"Joe1@mail.com"}}|
+|user|The user details|body|[UserRequest](#userrequest)|false||{"user":{"name":"Joe","email":"Joe1@mail.com"}}|
 
 #### Responses
 
@@ -143,7 +143,7 @@ Creates a new user
 > deletes chosen resource
 
 ```plaintext
-DELETE /api/users/217
+DELETE /api/users/87
 accept: application/json
 ```
 
@@ -152,7 +152,7 @@ accept: application/json
 ```plaintext
 204
 cache-control: max-age=0, private, must-revalidate
-x-request-id: gim50vau4qig93pcq2mfg1352u3g2leh
+x-request-id: b9kr116q9sjtfj82i9jn2647dma736nm
 ```
 
 ```json
@@ -187,7 +187,7 @@ accept: application/json
 200
 content-type: application/json; charset=utf-8
 cache-control: max-age=0, private, must-revalidate
-x-request-id: e3ks0sd3fo28u0udr3gdegfimgm5dtiv
+x-request-id: nos5vpjj3os59ccmn23d8cbdp0so4lu4
 ```
 
 ```json
@@ -208,7 +208,7 @@ List all users in the database
 > shows chosen resource
 
 ```plaintext
-GET /api/users/219
+GET /api/users/88
 accept: application/json
 ```
 
@@ -218,14 +218,14 @@ accept: application/json
 200
 content-type: application/json; charset=utf-8
 cache-control: max-age=0, private, must-revalidate
-x-request-id: u925skbh274iqlir9p8b3v3g70mj3860
+x-request-id: ac7e8rn1olr005tsmpfqr4amh4hi08o9
 ```
 
 ```json
 {
   "data": {
     "name": null,
-    "id": 219,
+    "id": 88,
     "email": null
   }
 }
@@ -249,7 +249,7 @@ Show a user by ID
 > updates and renders chosen resource when data is valid
 
 ```plaintext
-PUT /api/users/216
+PUT /api/users/90
 accept: application/json
 content-type: multipart/mixed; boundary=plug_conn_test
 ```
@@ -269,14 +269,14 @@ content-type: multipart/mixed; boundary=plug_conn_test
 200
 content-type: application/json; charset=utf-8
 cache-control: max-age=0, private, must-revalidate
-x-request-id: deb3rg88v09ue1ll17ahuu2kcfu5dmpv
+x-request-id: tk1tdafj884abiraguuc561sritcr7gg
 ```
 
 ```json
 {
   "data": {
     "name": "some content",
-    "id": 216,
+    "id": 90,
     "email": "some content"
   }
 }
@@ -285,7 +285,7 @@ x-request-id: deb3rg88v09ue1ll17ahuu2kcfu5dmpv
 > does not update chosen resource and renders errors when data is invalid
 
 ```plaintext
-PUT /api/users/218
+PUT /api/users/86
 accept: application/json
 content-type: multipart/mixed; boundary=plug_conn_test
 ```
@@ -302,7 +302,7 @@ content-type: multipart/mixed; boundary=plug_conn_test
 422
 content-type: application/json; charset=utf-8
 cache-control: max-age=0, private, must-revalidate
-x-request-id: s7r13o6egopua3kjmchvrq30r6b7tsa0
+x-request-id: 7qmbn1203vdkhpqsfu37j5ttd247i9ab
 ```
 
 ```json
@@ -325,7 +325,7 @@ Update all attributes of a user
 | Parameter   | Description | In |Type      | Required | Default | Example |
 |-------------|-------------|----|----------|----------|---------|---------|
 |id|User ID|path|integer|true||3|
-|user|The user details|body||false||{"user":{"name":"Joe","email":"joe4@mail.com"}}|
+|user|The user details|body|[UserRequest](#userrequest)|false||{"user":{"name":"Joe","email":"joe4@mail.com"}}|
 
 #### Responses
 

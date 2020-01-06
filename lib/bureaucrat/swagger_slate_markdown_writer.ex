@@ -254,7 +254,7 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
 
     file
     |> puts("#{details["description"]}\n")
-    |> write_parameters(details)
+    |> write_parameters(swagger, details)
     |> write_responses(details)
   end
 
@@ -276,16 +276,18 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
   Uses the vendor extension "x-example" to provide example of each parameter.
   TODO: detailed schema validation rules aren't shown yet (min/max/regex/etc...)
   """
-  def write_parameters(file, _ = %{"parameters" => params}) when length(params) > 0 or map_size(params) > 0 do
+  def write_parameters(file, swagger, _ = %{"parameters" => params}) when length(params) > 0 or map_size(params) > 0 do
     file
     |> puts("#### Parameters\n")
     |> puts("| Parameter   | Description | In |Type      | Required | Default | Example |")
     |> puts("|-------------|-------------|----|----------|----------|---------|---------|")
 
     Enum.each(params, fn param ->
+      enriched_param = resolve_schema_type(swagger, param)
+
       content =
         ["name", "description", "in", "type", "required", "default", "x-example"]
-        |> Enum.map(&param[&1])
+        |> Enum.map(&enriched_param[&1])
         |> Enum.map(&encode_parameter_table_cell/1)
         |> Enum.join("|")
 
@@ -295,7 +297,14 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
     puts(file, "")
   end
 
-  def write_parameters(file, _), do: file
+  def write_parameters(file, _swagger, _), do: file
+
+  def resolve_schema_type(swagger, %{"schema" => schema} = param) do
+    {_def, type} = resolve_type(swagger, schema)
+    Map.put(param, "type", type)
+  end
+
+  def resolve_schema_type(_swagger, param), do: param
 
   # Encode parameter table cell values as strings, using json library to convert lists/maps
   defp encode_parameter_table_cell(param) when is_map(param) or is_list(param), do: JSON.encode!(param)
