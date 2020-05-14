@@ -3,6 +3,10 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
   This markdown writer integrates swagger information and outputs in a slate-friendly markdown format.
   It requires that the decoded swagger data be available via Application.get_env(:bureaucrat, :swagger),
   eg by passing it as an option to the Bureaucrat.start/1 function.
+
+  It can also be configured with the following options, set via the `:writer_opts` argument of Bureaucrat:
+
+  * `:plainntext`: If `false`, will not render the plaintext version of request/response examples. Defaults to `true`
   """
 
   alias Bureaucrat.JSON
