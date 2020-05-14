@@ -340,13 +340,16 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
         str -> "#{record.request_path}?#{str}"
       end
 
+    plaintext = Keyword.get(config(), :plaintext, true)
     # Request with path and headers
-    file
-    |> puts("> #{record.assigns.bureaucrat_desc}\n")
-    |> puts("```plaintext")
-    |> puts("#{record.method} #{path}")
-    |> write_headers(record.req_headers)
-    |> puts("```\n")
+    if plaintext do
+      file
+      |> puts("> #{record.assigns.bureaucrat_desc}\n")
+      |> puts("```plaintext")
+      |> puts("#{record.method} #{path}")
+      |> write_headers(record.req_headers)
+      |> puts("```\n")
+    end
 
     # Request Body if applicable
     unless record.body_params == %{} do
@@ -359,10 +362,14 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
     # Response with status and headers
     file
     |> puts("> Response\n")
-    |> puts("```plaintext")
-    |> puts("#{record.status}")
-    |> write_headers(record.resp_headers)
-    |> puts("```\n")
+
+    if plaintext do
+      file
+      |> puts("```plaintext")
+      |> puts("#{record.status}")
+      |> write_headers(record.resp_headers)
+      |> puts("```\n")
+    end
 
     # Response body
     file
@@ -391,4 +398,6 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
       _ -> string |> JSON.decode!() |> JSON.encode!(pretty: true)
     end
   end
+
+  defp config, do: Application.get_env(:bureaucrat, :writer_opts, [])
 end
