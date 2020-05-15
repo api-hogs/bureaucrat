@@ -258,6 +258,7 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
 
     file
     |> puts("#{details["description"]}\n")
+    |> write_request(details)
     |> write_parameters(swagger, details)
     |> write_responses(details)
   end
@@ -266,12 +267,25 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
   Find the details of an API operation in swagger by operationId
   """
   def find_operation_by_id(swagger, operation_id) do
-    Enum.flat_map(swagger["paths"], fn {_path, actions} ->
-      Enum.map(actions, fn {_action, details} -> details end)
+    Enum.flat_map(swagger["paths"], fn {path, actions} ->
+      Enum.map(actions, fn {action, details} ->
+        details
+        |> Map.put("action", action)
+        |> Map.put("path", path)
+      end)
     end)
     |> Enum.find(fn details ->
       details["operationId"] == operation_id
     end)
+  end
+
+  @doc """
+  Writes the request method and path
+  """
+  def write_request(file, %{"action" => action, "path" => path}) do
+    file
+    |> puts("### Request\n")
+    |> puts("`#{String.upcase(action)} #{path}`")
   end
 
   @doc """
@@ -282,7 +296,7 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
   """
   def write_parameters(file, swagger, _ = %{"parameters" => params}) when length(params) > 0 or map_size(params) > 0 do
     file
-    |> puts("#### Parameters\n")
+    |> puts("### Parameters\n")
     |> puts("| Parameter   | Description | In |Type      | Required | Default | Example |")
     |> puts("|-------------|-------------|----|----------|----------|---------|---------|")
 
@@ -323,7 +337,7 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
   """
   def write_responses(file, swagger_operation) do
     file
-    |> puts("#### Responses\n")
+    |> puts("### Responses\n")
     |> puts("| Status | Description | Schema |")
     |> puts("|--------|-------------|--------|")
 
