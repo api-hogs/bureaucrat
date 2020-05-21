@@ -96,9 +96,14 @@ defmodule Bureaucrat.Helpers do
       |> Keyword.put(:line, line)
 
     quote bind_quoted: [conn: conn, opts: opts] do
+      %{phoenix_controller: elixir_controller, phoenix_action: action} = conn.private
+      controller = elixir_controller |> to_string() |> String.trim("Elixir.")
+
+      default_operation_id = "#{controller}.#{action}"
+
       opts =
         opts
-        |> Keyword.put_new(:operation_id, default_operation_id(conn))
+        |> Keyword.put_new(:operation_id, default_operation_id)
 
       Bureaucrat.Recorder.doc(conn, opts)
       conn
@@ -141,12 +146,5 @@ defmodule Bureaucrat.Helpers do
     conn
     |> Plug.Conn.put_private(:phoenix_controller, controller_name)
     |> Plug.Conn.put_private(:phoenix_action, action)
-  end
-
-  defp default_operation_id(conn) do
-    %{phoenix_controller: elixir_controller, phoenix_action: action} = conn.private
-    controller = elixir_controller |> to_string() |> String.trim("Elixir.")
-
-    "#{controller}.#{action}"
   end
 end
