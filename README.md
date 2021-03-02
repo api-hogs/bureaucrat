@@ -1,12 +1,9 @@
-Bureaucrat
-==========
+# Bureaucrat
 
 Bureaucrat is a library that lets you generate API documentation of your Phoenix
 app from tests.
 
-
-Installation
-------------
+## Installation
 
 First, add Bureaucrat to your `mix.exs` dependencies:
 
@@ -56,8 +53,7 @@ end
 
 To generate Phoenix channel documentation, import the helpers in `test/support/channel_case.ex` alike.
 
-Usage
------
+## Usage
 
 Bureaucrat collects data from connection structs used in tests.
 If you want a connection to be documented, pass it to the `doc/1` function:
@@ -84,29 +80,29 @@ end
 ```
 
 Then, to generate the documentation file(s) run `DOC=1 mix test`.
-The default output file is `web/controllers/README.md`.
+The default output file is `API.md` in the project root.
 
 ### Custom intro sections
 
-To add a custom intro section, for each output file, bureaucrat will look for an __intro markdown file__ in the output directory,
+To add a custom intro section, for each output file, bureaucrat will look for an **intro markdown file** in the output directory,
 named like the output file with a `_intro` or `_INTRO` suffix (before `.md`, if present), e.g.
 
-  * `web/controllers/README` -> `web/controllers/README_INTRO`
-  * `web/controllers/readme.md` -> `web/controllers/readme_intro.md`
+- `web/controllers/README` -> `web/controllers/README_INTRO`
+- `web/controllers/readme.md` -> `web/controllers/readme_intro.md`
 
 Currently the supported writers are the default `Bureaucrat.MarkdownWriter` and `Bureaucrat.ApiBlueprintWriter`.
 
-Documenting Phoenix Channels
-----------------------------
+## Documenting Phoenix Channels
 
 Bureaucrat can also generate documentation for messages, replies and broadcasts in [Phoenix Channels](http://www.phoenixframework.org/docs/channels).
 
 Results of `assert_push`, `assert_broadcast` and the underlying `assert_receive` (if used for messages or broadcasts) can be passed to the `doc` function.
 
 To document usage of [Phoenix.ChannelTest](https://hexdocs.pm/phoenix/Phoenix.ChannelTest.html) helpers `push`, `broadcast_from` and `broadcast_from!`, Bureaucrat includes documenting alternatives, prefixed with `doc_`:
-  * `doc_push`
-  * `doc_broadcast_from`
-  * `doc_broadcast_from!`
+
+- `doc_push`
+- `doc_broadcast_from`
+- `doc_broadcast_from!`
 
 ```elixir
 test "message:new broadcasts are pushed to the client", %{socket: socket} do
@@ -118,8 +114,7 @@ end
 
 Channels docs output is currently only supported by the `Bureaucrat.MarkdownWriter` and only to the `default_path` (see [Configuration](#configuration) below).
 
-Swagger & Slate Integration
----------------------------
+## Swagger & Slate Integration
 
 Bureaucrat comes with the `Bureaucrat.SwaggerSlateMarkdownWriter` backend that will merge test examples with a swagger spec to produce markdown files that can be processed with the [slate](https://github.com/lord/slate) static generator.
 
@@ -184,8 +179,7 @@ Run your application with `mix phoenix.server` and visit `http://localhost:4000/
 
 For a full example see the `examples/swagger_demo` project.
 
-API Blueprint support
----------------------------
+## API Blueprint support
 
 Bureaucrat also supports generating markdown files that are formatted in the [API Blueprint](https://apiblueprint.org/) syntax.
 Simply set the `Bureaucrat.ApiBlueprintWriter` in your configuration file and run the usual:
@@ -201,6 +195,7 @@ aglio -i web/controllers/api/v1/documentation.md -o web/controllers/api/v1/docum
 ```
 
 ### API Blueprint usage note
+
 If you're piping through custom plugs than can prevent the HTTP requests to land in the controllers (authentication, authorization) and you want to document these cases you'll need the `plug_doc()` helper:
 
 ```
@@ -217,8 +212,7 @@ end
 
 Without the `plug_doc()` helper Bureaucrat doesn't know the `phoenix_controller` (since the request never landed in the controller) and an error is raised: `** (RuntimeError) GET all items (/api/v1/items) doesn't have required :phoenix_controller key. Have you forgotten to plug_doc()?`
 
-Configuration
--------------
+## Configuration
 
 The configuration options can be passed to `Bureaucrat.start`:
 
@@ -235,16 +229,16 @@ Bureaucrat.start(
 
 The available options are:
 
-* `:writer`: The module used to generate docs from the list of captured
-connections.
-* `:default_path`: The path where the docs are written by default.
-* `:paths`: Allows you to specify different doc paths for some of your modules.
-For example `[{YourApp.Api.V1, "web/controllers/api/v1/README.md"}]` will
-cause the docs for controllers under `YourApp.Api.V1` namespace to
-be written to `web/controllers/api/v1/README.md`.
-* `:titles`: Allows you to specify explicit titles for some of your modules.
-For example `[{YourApp.Api.V1.UserController, "API /v1/users"}]` will
-change the title (Table of Contents entry and heading) for this controller.
-* `:prefix`: Allows you to remove the prefix of the test module names
-* `:env_var`: The environment variable used as a flag to trigger doc generation.
-* `:json_library`: The JSON library to use. Poison (the default) and Jason both work.
+- `:writer`: The module used to generate docs from the list of captured
+  connections.
+- `:default_path`: The path where the docs are written by default.
+- `:paths`: Allows you to specify different doc paths for some of your modules.
+  For example `[{YourApp.Api.V1, "web/controllers/api/v1/README.md"}]` will
+  cause the docs for controllers under `YourApp.Api.V1` namespace to
+  be written to `web/controllers/api/v1/README.md`.
+- `:titles`: Allows you to specify explicit titles for some of your modules.
+  For example `[{YourApp.Api.V1.UserController, "API /v1/users"}]` will
+  change the title (Table of Contents entry and heading) for this controller.
+- `:prefix`: Allows you to remove the prefix of the test module names
+- `:env_var`: The environment variable used as a flag to trigger doc generation.
+- `:json_library`: The JSON library to use. Poison (the default) and Jason both work.
