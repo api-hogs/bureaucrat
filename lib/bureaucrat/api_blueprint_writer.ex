@@ -174,11 +174,23 @@ defmodule Bureaucrat.ApiBlueprintWriter do
   end
 
   defp group_records(records) do
-    records
-    |> Enum.group_by(&module_name(&1.private.phoenix_controller))
-    |> Enum.map(fn {controller_name, records} ->
-      {controller_name, Enum.group_by(records, & &1.private.phoenix_action)}
+    by_controller = Bureaucrat.Util.stable_group_by(records, &get_controller/1)
+
+    Enum.map(by_controller, fn {c, recs} ->
+      {c, Bureaucrat.Util.stable_group_by(recs, &get_action/1)}
     end)
-    |> Enum.sort()
   end
+
+  defp strip_ns(module) do
+    case to_string(module) do
+      "Elixir." <> rest -> rest
+      other -> other
+    end
+  end
+
+  defp get_controller({_, opts}), do: opts[:group_title] || String.replace_suffix(strip_ns(opts[:module]), "Test", "")
+  defp get_controller(conn), do: conn.assigns.bureaucrat_opts[:group_title] || strip_ns(conn.private.phoenix_controller)
+
+  defp get_action({_, opts}), do: opts[:description]
+  defp get_action(conn), do: conn.private.phoenix_action
 end
