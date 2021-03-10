@@ -37,7 +37,7 @@ defmodule Bureaucrat.ApiBlueprintWriter do
     |> Enum.each(&write_example(&1, file))
   end
 
-  defp write_parameters(_path_params = %{}, _file), do: nil
+  defp write_parameters(path_params, _file) when map_size(path_params) == 0, do: nil
 
   defp write_parameters(path_params, file) do
     file |> puts("\n+ Parameters\n#{formatted_params(path_params)}")
@@ -106,7 +106,7 @@ defmodule Bureaucrat.ApiBlueprintWriter do
     write_response_body(record.resp_body, file)
   end
 
-  defp write_response_body(_params = %{}, _file), do: nil
+  defp write_response_body(params, _file) when map_size(params) == 0, do: nil
 
   defp write_response_body(params, file) do
     file
@@ -144,24 +144,19 @@ defmodule Bureaucrat.ApiBlueprintWriter do
   end
 
   def anchor(record) do
-    if record.path_params == %{} do
-      record.request_path
-    else
-      ([""] ++ Enum.drop(record.path_info, -1) ++ ["{id}"]) |> Enum.join("/")
+    case map_size(record.path_params) do
+      0 ->
+        record.request_path
+
+      num ->
+        params_list = for {key, _} <- record.path_params, do: "{#{key}}"
+        Enum.join([""] ++ Enum.drop(record.path_info, -num) ++ params_list, "/")
     end
   end
 
   defp puts(file, string) do
     IO.puts(file, string)
     file
-  end
-
-  defp module_name(module) do
-    module
-    |> to_string
-    |> String.split("Elixir.")
-    |> List.last()
-    |> controller_name()
   end
 
   def controller_name(module) do

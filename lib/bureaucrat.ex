@@ -2,11 +2,7 @@ defmodule Bureaucrat do
   use Application
 
   def start(_type, []) do
-    import Supervisor.Spec
-
-    children = [
-      worker(Bureaucrat.Recorder, [])
-    ]
+    children = [Bureaucrat.Recorder]
 
     opts = [strategy: :one_for_one, name: Bureaucrat.Supervisor]
     Supervisor.start_link(children, opts)

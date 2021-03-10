@@ -3,9 +3,8 @@ defmodule Bureaucrat.Recorder do
 
   alias Phoenix.Socket
   alias Phoenix.Socket.{Broadcast, Message, Reply}
-  alias Bureaucrat.Recorder.ConnPreprocessor
 
-  def start_link do
+  def start_link([]) do
     {:ok, _} = GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
