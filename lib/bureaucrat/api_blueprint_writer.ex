@@ -143,15 +143,21 @@ defmodule Bureaucrat.ApiBlueprintWriter do
     "    + #{URI.encode(elem(param, 0))}: `#{URI.encode(elem(param, 1))}`"
   end
 
-  def anchor(record) do
-    case map_size(record.path_params) do
-      0 ->
-        record.request_path
+  def anchor(record) when map_size(record.path_params) == 0 do
+    record.request_path
+  end
 
-      num ->
-        params_list = for {key, _} <- record.path_params, do: "{#{key}}"
-        Enum.join([""] ++ Enum.drop(record.path_info, -num) ++ params_list, "/")
-    end
+  def anchor(record) do
+    Enum.join([""] ++ set_params(record), "/")
+  end
+
+  defp set_params(record) do
+    Enum.flat_map(record.path_info, fn part ->
+      case Enum.find(record.path_params, fn {_key, val} -> val == part end) do
+        {param, _} -> ["{#{param}}"]
+        nil -> [part]
+      end
+    end)
   end
 
   defp puts(file, string) do
