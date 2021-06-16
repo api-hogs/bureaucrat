@@ -6,7 +6,32 @@ defmodule Bureaucrat.ApiBlueprintWriter do
     records = group_records(records)
     title = Application.get_env(:bureaucrat, :title)
     puts(file, "# #{title}\n\n")
+    write_intro(path, file)
     write_api_doc(records, file)
+  end
+
+  defp write_intro(path, file) do
+    intro_file_path =
+      [
+        # /path/to/API.md -> /path/to/API_INTRO.md
+        String.replace(path, ~r/\.md$/i, "_INTRO\\0"),
+        # /path/to/api.md -> /path/to/api_intro.md
+        String.replace(path, ~r/\.md$/i, "_intro\\0"),
+        # /path/to/API -> /path/to/API_INTRO
+        "#{path}_INTRO",
+        # /path/to/api -> /path/to/api_intro
+        "#{path}_intro"
+      ]
+      # which one exists?
+      |> Enum.find(nil, &File.exists?/1)
+
+    if intro_file_path do
+      file
+      |> puts(File.read!(intro_file_path))
+      |> puts("\n\n## Endpoints\n\n")
+    else
+      puts(file, "# API Documentation\n")
+    end
   end
 
   defp write_api_doc(records, file) do
