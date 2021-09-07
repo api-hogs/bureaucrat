@@ -53,7 +53,9 @@ defmodule Bureaucrat.ApiBlueprintWriter do
     record_request = Enum.at(records, 0)
     method = record_request.method
 
-    file |> puts("### #{test_description} [#{method} #{anchor(record_request)}]")
+    file
+    |> puts("### #{test_description} [#{method} #{anchor(record_request)}]")
+    |> puts("\n\n #{Keyword.get(record_request.assigns.bureaucrat_opts, :detail, "")}")
 
     write_parameters(record_request.path_params, file)
 
