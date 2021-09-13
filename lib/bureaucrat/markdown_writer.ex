@@ -132,6 +132,7 @@ defmodule Bureaucrat.MarkdownWriter do
 
     file
     |> puts("#### #{record.assigns.bureaucrat_desc}")
+    |> puts("#{Keyword.get(record.assigns.bureaucrat_opts, :detail, "")}")
     |> puts("##### Request")
     |> puts("* __Method:__ #{record.method}")
     |> puts("* __Path:__ #{path}")
