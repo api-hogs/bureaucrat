@@ -96,10 +96,7 @@ defmodule Bureaucrat.Helpers do
       |> Keyword.put(:line, line)
 
     quote bind_quoted: [conn: conn, opts: opts] do
-      %{phoenix_controller: elixir_controller, phoenix_action: action} = conn.private
-      controller = elixir_controller |> to_string() |> String.trim("Elixir.")
-
-      default_operation_id = "#{controller}.#{action}"
+      default_operation_id = get_default_operation_id(conn)
 
       opts =
         opts
@@ -120,6 +117,21 @@ defmodule Bureaucrat.Helpers do
     else
       group_title_for(mod, paths)
     end
+  end
+
+  def get_default_operation_id(%Plug.Conn{private: private}) do
+    %{phoenix_controller: elixir_controller, phoenix_action: action} = private
+    controller = elixir_controller |> to_string() |> String.trim("Elixir.")
+
+    "#{controller}.#{action}"
+  end
+
+  def get_default_operation_id(%Message{topic: topic, event: event}) do
+    "#{topic}.#{event}"
+  end
+
+  def get_default_operation_id(%Broadcast{topic: topic, event: event}) do
+    "#{topic}.#{event}"
   end
 
   @doc """
