@@ -1,5 +1,6 @@
 defmodule Bureaucrat.Helpers do
   alias Phoenix.Socket.{Broadcast, Message, Reply}
+  alias Phoenix.Socket
 
   @doc """
   Adds a conn to the generated documentation.
@@ -136,6 +137,10 @@ defmodule Bureaucrat.Helpers do
 
   def get_default_operation_id(%Reply{topic: topic}) do
     "#{topic}.reply"
+  end
+
+  def get_default_operation_id({_, _, %Socket{endpoint: endpoint}}) do
+    "#{endpoint}.reply"
   end
 
   @doc """
