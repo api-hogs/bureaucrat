@@ -123,6 +123,21 @@ defmodule Bureaucrat.MarkdownWriter do
     end
   end
 
+  defp write_example({{status, %Phoenix.Socket{}, _handler, params, _connect_info}, _}, file) do
+    # for connect
+    file
+    |> puts("#### Connect")
+
+    if params != %{} do
+      file
+      |> puts("* __Body:__")
+      |> puts("```json")
+      |> puts("#{format_body_params(params)}")
+      |> puts("```")
+    end
+    |> puts("* __Receive:__ #{status}")
+  end
+
   defp write_example(record, file) do
     path =
       case record.query_string do

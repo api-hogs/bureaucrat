@@ -98,8 +98,9 @@ Bureaucrat can also generate documentation for messages, replies and broadcasts 
 
 Results of `assert_push`, `assert_broadcast` and the underlying `assert_receive` (if used for messages or broadcasts) can be passed to the `doc` function.
 
-To document usage of [Phoenix.ChannelTest](https://hexdocs.pm/phoenix/Phoenix.ChannelTest.html) helpers `push`, `broadcast_from` and `broadcast_from!`, Bureaucrat includes documenting alternatives, prefixed with `doc_`:
+To document usage of [Phoenix.ChannelTest](https://hexdocs.pm/phoenix/Phoenix.ChannelTest.html) helpers `connect`, `push`, `broadcast_from` and `broadcast_from!`, Bureaucrat includes documenting alternatives, prefixed with `doc_`:
 
+- `doc_connect`
 - `doc_push`
 - `doc_broadcast_from`
 - `doc_broadcast_from!`
