@@ -24,6 +24,10 @@ defmodule Bureaucrat.Recorder do
     GenServer.cast(__MODULE__, {:channel_doc, join_socket, opts})
   end
 
+  def doc({_, %Socket{}, _, _, _} = connect_socket, opts) do
+    GenServer.cast(__MODULE__, {:channel_doc, connect_socket, opts})
+  end
+
   def doc(conn, opts) do
     GenServer.cast(__MODULE__, {:doc, conn, opts})
   end
