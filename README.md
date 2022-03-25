@@ -9,7 +9,7 @@ First, add Bureaucrat to your `mix.exs` dependencies:
 
 ```elixir
 defp deps do
-  [{:bureaucrat, "~> 0.2.7"}]
+  [{:bureaucrat, "~> 0.2.9"}]
 end
 ```
 
@@ -18,7 +18,7 @@ Bureaucrat needs a json library and defaults to Poison. It must be added as a de
 ```elixir
 defp deps do
   [
-    {:bureaucrat, "~> 0.2.7"},
+    {:bureaucrat, "~> 0.2.9"},
     {:poison, "~> 3.0"}
   ]
 end
