@@ -51,7 +51,8 @@ defmodule Bureaucrat.MarkdownWriter do
   end
 
   defp write_controller(controller, records, file) do
-    puts(file, "## #{controller}")
+    anchor = to_anchor(controller)
+    puts(file, "## <a id=#{anchor}></a>#{controller}")
 
     Enum.each(records, fn {action, records} ->
       write_action(action, controller, records, file)
