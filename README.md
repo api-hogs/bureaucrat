@@ -60,9 +60,9 @@ If you want a connection to be documented, pass it to the `doc/1` function:
 
 ```elixir
 test "GET /api/v1/products" do
-  conn = conn()
+  conn = conn
       |> get("/api/v1/products")
-      |> doc
+      |> doc()
   assert conn.status == 200
 end
 ```
@@ -71,7 +71,7 @@ Additional options can be passed to the backend formatter:
 
 ```elixir
 test "GET /api/v1/products" do
-  conn = conn()
+  conn = conn
       |> get("/api/v1/products")
       |> doc(description: "List all products", operation_id: "list_products")
   assert conn.status == 200
@@ -109,7 +109,7 @@ To document usage of [Phoenix.ChannelTest](https://hexdocs.pm/phoenix/Phoenix.Ch
 test "message:new broadcasts are pushed to the client", %{socket: socket} do
   doc_broadcast_from! socket, "message:new", %{body: "Hello there!", timestamp: 1483971926566, user: "marla"}
   assert_push("message:new", %{body: "Hello there!", timestamp: 1483971926566, user: "marla"})
-  |> doc
+  |> doc()
 end
 ```
 
