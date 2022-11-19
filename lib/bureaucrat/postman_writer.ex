@@ -1,7 +1,14 @@
 defmodule WebDoc.PostmanWriter do
   @moduledoc """
-  Writes a Postman Collection v2.1 json file.
+  Writes records to Postman Collection v2.1 json file that can be imported directly to Postman.
   [JSON Schema](https://schema.postman.com/json/collection/v2.1.0/docs/index.html)
+
+  Writes one record per postman request and each response is a postman example.
+  Test descriptions are used as example names, along with the response status.
+  Key ended on `_id` on params/query/body have value substituted by environment `{{variables}}`.
+  Params/query/body that aren't sent on all requests are disabled.
+  Uses filename as collection name and human controller names as folders for actions.
+  Supports bearer authentication header.
   """
 
   alias Bureaucrat.JSON
@@ -138,8 +145,7 @@ defmodule WebDoc.PostmanWriter do
 
   defp build_responses(records) do
     Enum.map(records, fn record ->
-      body =
-        record.resp_body != "" && record.resp_body |> JSON.decode!() |> JSON.encode!(pretty: true)
+      body = record.resp_body != "" && record.resp_body |> JSON.decode!() |> JSON.encode!(pretty: true)
 
       %{
         body: body,
