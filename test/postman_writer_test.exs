@@ -1,6 +1,6 @@
-defmodule Bureaucrat.ApiBlueprintWriterTest do
+defmodule Bureaucrat.PostmanWriterTest do
   use ExUnit.Case
 
-  describe "api blueprint writer test" do
+  describe "postman writer test" do
   end
 end
