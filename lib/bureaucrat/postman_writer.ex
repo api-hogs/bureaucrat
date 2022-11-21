@@ -125,7 +125,6 @@ defmodule WebDoc.PostmanWriter do
     end
   end
 
-  # set disabled to key-value that isn't present on all maps
   defp build_key_value(maps) do
     all_keys = maps |> Enum.flat_map(fn map -> Map.keys(map) end) |> Enum.uniq()
     disabled_keys = maps |> Enum.flat_map(fn map -> all_keys -- Map.keys(map) end) |> MapSet.new()
@@ -140,6 +139,7 @@ defmodule WebDoc.PostmanWriter do
         {k, v}
       end
     end)
+    # set disabled to key-value that isn't present on all maps
     |> Enum.map(fn {k, v} -> %{key: k, value: v, disabled: k in disabled_keys} end)
   end
 

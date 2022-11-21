@@ -213,6 +213,20 @@ end
 
 Without the `plug_doc()` helper Bureaucrat doesn't know the `phoenix_controller` (since the request never landed in the controller) and an error is raised: `** (RuntimeError) GET all items (/api/v1/items) doesn't have required :phoenix_controller key. Have you forgotten to plug_doc()?`
 
+## Postman support
+
+Bureaucrat also supports generating json files that are formatted in the
+[Postman Collection v2.1](https://schema.postman.com/json/collection/v2.1.0/docs/index.html) schema.
+
+It writes one folder per controller, one request per action and one response per test example.
+ExUnit test descriptions are used as response example names, along with the response status.
+Params/query/body keys that are ended in `_id` have values substituted by environment `{{variables}}`.
+Sets the collection name as the json filename specified in `path` configuration.
+Supports bearer authentication header.
+
+Use with `Bureaucrat.start(writer: Bureaucrat.PostmanWriter)`
+Supports all configurations but not custom `titles` or intro files.
+
 ## Configuration
 
 The configuration options can be passed to `Bureaucrat.start`:
