@@ -15,7 +15,7 @@ defmodule Bureaucrat.PostmanWriter do
 
   def write(records, path) do
     json = build_collection(records, path)
-    file = File.open!(path <> ".json", [:write, :utf8])
+    file = File.open!(path, [:write, :utf8])
     IO.puts(file, JSON.encode!(json, pretty: true))
     File.close(file)
   end
@@ -89,6 +89,7 @@ defmodule Bureaucrat.PostmanWriter do
     |> String.replace(".", " ")
   end
 
+  defp prettify_json(nil), do: nil
   defp prettify_json(""), do: ""
   defp prettify_json(json), do: json |> JSON.decode!() |> JSON.encode!(pretty: true)
 

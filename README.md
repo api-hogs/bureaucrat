@@ -224,8 +224,16 @@ Params/query/body keys that are ended in `_id` have values substituted by enviro
 Sets the collection name as the json filename specified in `path` configuration.
 Supports bearer authentication header.
 
-Use with `Bureaucrat.start(writer: Bureaucrat.PostmanWriter)`
+```elixir
+Bureaucrat.start(
+  writer: Bureaucrat.PostmanWriter,
+  prefix: "Elixir.MyAppWeb",
+  default_path: "docs/my_app.json"
+)
+```
+
 Supports all configurations but not custom `titles` or intro files.
+Use `prefix` to trim the prefix out of the Postman folder names.
 
 ## Configuration
 
