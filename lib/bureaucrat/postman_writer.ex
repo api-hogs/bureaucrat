@@ -1,4 +1,4 @@
-defmodule WebDoc.PostmanWriter do
+defmodule Bureaucrat.PostmanWriter do
   @moduledoc """
   Writes records to Postman Collection v2.1 json file that can be imported directly to Postman.
   [JSON Schema](https://schema.postman.com/json/collection/v2.1.0/docs/index.html)
@@ -21,30 +21,51 @@ defmodule WebDoc.PostmanWriter do
   end
 
   defp build_collection(records, path) do
-    info = %{
-      name: path |> Path.basename(".json") |> Macro.camelize(),
-      schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-    }
-
-    items =
-      records
-      |> group_records()
-      |> Enum.map(fn {_controller, actions} ->
-        title = actions |> List.first() |> elem(1) |> List.first() |> human_controller_name()
-        %{name: title, item: build_actions(actions)}
-      end)
-
-    %{item: items, info: info}
-  end
-
-  defp build_actions(actions) do
-    Enum.map(actions, fn {_action, records} ->
-      %{
-        name: records |> List.first() |> build_path(),
-        request: build_request(records),
-        response: build_responses(records)
+    %{
+      item:
+        records
+        |> group_records()
+        |> Enum.map(fn {controller, actions} ->
+          %{
+            name: controller_name(controller),
+            item:
+              Enum.map(actions, fn {_action, records} ->
+                %{
+                  name: records |> List.first() |> build_path(),
+                  request: %{
+                    auth: build_auth(records),
+                    body: build_req_body(records),
+                    header: records |> Enum.map(& &1.req_headers) |> build_key_value(),
+                    method: records |> List.first() |> Map.get(:method),
+                    url: build_url(records)
+                  },
+                  response:
+                    Enum.map(records, fn record ->
+                      %{
+                        body: prettify_json(record.resp_body),
+                        code: record.status,
+                        header: build_key_value([record.resp_headers]),
+                        name: build_description(record),
+                        originalRequest: %{
+                          auth: build_auth([record]),
+                          body: build_req_body([record]),
+                          header: build_key_value([record.req_headers]),
+                          method: record.method,
+                          url: build_url([record])
+                        },
+                        status: Plug.Conn.Status.reason_phrase(record.status),
+                        _postman_previewlanguage: "json"
+                      }
+                    end)
+                }
+              end)
+          }
+        end),
+      info: %{
+        name: path |> Path.basename(".json") |> Macro.camelize(),
+        schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
       }
-    end)
+    }
   end
 
   defp group_records(records) do
@@ -58,27 +79,18 @@ defmodule WebDoc.PostmanWriter do
   defp get_action(record), do: record.private.phoenix_action
   defp get_controller(record), do: record.private.phoenix_controller
 
-  defp human_controller_name(record) do
-    controller = record |> get_controller() |> Atom.to_string()
+  defp controller_name(controller) do
+    prefix = Application.get_env(:bureaucrat, :prefix)
 
-    controller_name =
-      case controller |> String.trim_trailing("Controller") |> String.split(".") do
-        [_elixir, _app_name | controller_name] when controller_name != [] -> controller_name
-        [_elixir | controller_name] when controller_name != [] -> controller_name
-        erlang_module -> erlang_module
-      end
-
-    controller_name |> Enum.uniq() |> Enum.join(" ")
+    ~r/#{prefix}(.+)/
+    |> Regex.run(Atom.to_string(controller), capture: :all_but_first)
+    |> List.first()
+    |> String.trim_trailing("Controller")
+    |> String.replace(".", " ")
   end
 
-  defp build_request([record | _] = records) do
-    %{
-      method: record.method,
-      url: build_url(records),
-      body: build_req_body(records),
-      auth: build_auth(records)
-    }
-  end
+  defp prettify_json(""), do: ""
+  defp prettify_json(json), do: json |> JSON.decode!() |> JSON.encode!(pretty: true)
 
   defp build_url([record | _] = records) do
     path = build_path(record)
@@ -125,8 +137,11 @@ defmodule WebDoc.PostmanWriter do
     end
   end
 
-  # set disabled to key-value that isn't present on all maps
-  defp build_key_value(maps) do
+  defp build_key_value([first | _] = lists) when is_list(first) do
+    lists |> Enum.map(&Map.new/1) |> build_key_value()
+  end
+
+  defp build_key_value([first | _] = maps) when is_map(first) do
     all_keys = maps |> Enum.flat_map(fn map -> Map.keys(map) end) |> Enum.uniq()
     disabled_keys = maps |> Enum.flat_map(fn map -> all_keys -- Map.keys(map) end) |> MapSet.new()
 
@@ -141,22 +156,6 @@ defmodule WebDoc.PostmanWriter do
       end
     end)
     |> Enum.map(fn {k, v} -> %{key: k, value: v, disabled: k in disabled_keys} end)
-  end
-
-  defp build_responses(records) do
-    Enum.map(records, fn record ->
-      body = record.resp_body != "" && record.resp_body |> JSON.decode!() |> JSON.encode!(pretty: true)
-
-      %{
-        body: body,
-        code: record.status,
-        header: Enum.map(record.resp_headers, fn {k, v} -> %{key: k, value: v} end),
-        name: build_description(record),
-        originalRequest: build_request([record]),
-        status: Plug.Conn.Status.reason_phrase(record.status),
-        _postman_previewlanguage: "json"
-      }
-    end)
   end
 
   defp build_description(record) do
