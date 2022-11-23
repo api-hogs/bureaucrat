@@ -82,6 +82,29 @@ end
 Then, to generate the documentation file(s) run `DOC=1 mix test`.
 The default output file is `API.md` in the project root.
 
+### Pipe `|> doc()` automatically
+If you don't want to call `|> doc()` on each request, you can import `Bureaucrat.Macros`.
+
+- It automatically adds `|> doc()` to the `Phoenix.ConnTest` macros
+- It creates other macros: `get_undocumented`, `post_undocumented`, `patch_undocumented`, `put_undocumented` and `delete_undocumented`, to be used in requests you want to skip docs
+
+You can also use the `_undocumented` version to overcome the fact that `|> doc()` can only be called
+from a test block, not a private function.
+
+To achieve this, replace
+
+```elixir
+import Phoenix.ConnTest
+```
+
+By
+
+```elixir
+import Phoenix.ConnTest, only: :functions
+import Bureaucrat.Helpers
+import Bureaucrat.Macros
+```
+
 ### Custom intro sections
 
 To add a custom intro section, for each output file, bureaucrat will look for an **intro markdown file** in the output directory,
