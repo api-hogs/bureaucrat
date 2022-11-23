@@ -86,7 +86,7 @@ The default output file is `API.md` in the project root.
 If you don't want to call `|> doc()` on each request, you can import `Bureaucrat.Macros`.
 
 - It automatically adds `|> doc()` to the `Phoenix.ConnTest` macros
-- It creates other macros: `get_undocumented`, `post_undocumented`, `patch_undocumented`, `put_undocumented` and `delete_undocumented`, to be used in requests you want to skip docs.
+- It creates other macros: `get_undocumented`, `post_undocumented`, `patch_undocumented`, `put_undocumented` and `delete_undocumented`, to be used in requests you want to skip docs
 
 You can also use the `_undocumented` version to overcome the fact that `|> doc()` can only be called
 from a test block, not a private function.
