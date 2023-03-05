@@ -133,6 +133,13 @@ defmodule Bureaucrat.Helpers do
 
   def format_test_name("test " <> name), do: name
 
+  def format_test_name(function_name),
+    do: raise("It looks like you called a `Phoenix.ConnTest` macro inside `#{function_name}`.
+        Bureaucrat can only document macros `get`, `post`, `delete`, etc. when they are called inside a `test` block.
+
+        If the request macro is called inside a private function or setup, you should explicitly say you don't want Bureaucrat to document this request.
+        Use `get_undocumented`, `post_undocumented`, `delete_undocumented`, `patch_undocumented` or `put_undocumented` instead.")
+
   def group_title_for(_mod, []), do: nil
 
   def group_title_for(mod, [{other, path} | paths]) do

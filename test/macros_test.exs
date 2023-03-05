@@ -96,4 +96,39 @@ defmodule Bureaucrat.MacrosTest do
       assert error.message =~ "Bureaucrat couldn't find a controller and/or action for this request"
     end
   end
+
+  # We want to raise an error when Phoenix.ConnTest macros are called outside a `test` block.
+  # This test mimics a userland test that calls Phoenix.ConnTest.{get, post, put, delete}
+  # and asserts that a RuntimeError is raised when compiling the code.
+  # This is counterintuitive, but remember that some of Bureaucrat's runtime is during test compilation.
+  for method <- [:get, :post, :put, :delete] do
+    @method method
+    test "Raises runtime error with message when calling #{@method} outside a `test` block" do
+      module_name = :"RuntimeErrorTest#{@method |> Atom.to_string() |> Macro.camelize()}"
+
+      ast =
+        quote do
+          defmodule unquote(module_name) do
+            use ExUnit.Case, async: false
+            import Phoenix.ConnTest, only: :functions
+            import Bureaucrat.Helpers
+            import Bureaucrat.Macros
+
+            @endpoint false
+
+            test "mock test that will fail" do
+              foo()
+            end
+
+            defp foo() do
+              unquote(@method)(:fake_conn, "/hello", %{foo: "bar"})
+            end
+          end
+        end
+
+      error = assert_raise RuntimeError, fn -> Code.eval_quoted(ast) end
+
+      assert error.message =~ "It looks like you called a `Phoenix.ConnTest` macro inside `foo`."
+    end
+  end
 end
