@@ -144,10 +144,16 @@ defmodule Bureaucrat.Helpers do
   end
 
   def get_default_operation_id(%Plug.Conn{private: private}) do
-    %{phoenix_controller: elixir_controller, phoenix_action: action} = private
-    controller = elixir_controller |> to_string() |> String.trim("Elixir.")
+    case private do
+      %{phoenix_controller: elixir_controller, phoenix_action: action} ->
+        controller = elixir_controller |> to_string() |> String.trim("Elixir.")
+        "#{controller}.#{action}"
 
-    "#{controller}.#{action}"
+      _ ->
+        raise "Bureaucrat couldn't find a controller and/or action for this request.
+            Possibly, the request is halted by a plug before it gets to the controller.
+            Please use `get_undocumented` or `post_undocumented` (etc.) instead."
+    end
   end
 
   def get_default_operation_id(%Message{topic: topic, event: event}) do

@@ -68,4 +68,32 @@ defmodule Bureaucrat.MacrosTest do
       assert [] = Recorder.get_records()
     end
   end
+
+  # If the request doesn't have a `phoenix_action` or `phoenix_controller`, we show an error.
+  # This might happen in practice if the request is halted by a Plug before reaching the controller,
+  # but we will simulate it by simply not including `phoenix_action` or `phoenix_controller` on `conn`.
+  for method <- [:get, :post, :put, :delete] do
+    @method method
+    test "#{method} macro raises with a message if no Phoenix controller" do
+      conn =
+        build_conn()
+        |> Plug.Conn.put_req_header("accept", "application/json")
+        |> Plug.Conn.put_private(:phoenix_action, :bar)
+
+      error = assert_raise RuntimeError, fn -> unquote(@method)(conn, "/", %{foo: "bar"}) end
+
+      assert error.message =~ "Bureaucrat couldn't find a controller and/or action for this request"
+    end
+
+    test "#{method} macro raises with a message if no Phoenix action" do
+      conn =
+        build_conn()
+        |> Plug.Conn.put_req_header("accept", "application/json")
+        |> Plug.Conn.put_private(:phoenix_controller, FooController)
+
+      error = assert_raise RuntimeError, fn -> unquote(@method)(conn, "/", %{foo: "bar"}) end
+
+      assert error.message =~ "Bureaucrat couldn't find a controller and/or action for this request"
+    end
+  end
 end
