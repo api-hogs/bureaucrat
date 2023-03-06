@@ -116,11 +116,11 @@ defmodule Bureaucrat.MacrosTest do
 
             @endpoint false
 
-            test "mock test that will fail" do
-              foo()
+            test "won't compile because it calls Phoenix.ConnTest.#{unquote(@method)} in private function" do
+              private_caller()
             end
 
-            defp foo() do
+            defp private_caller() do
               unquote(@method)(:fake_conn, "/hello", %{foo: "bar"})
             end
           end
@@ -128,7 +128,7 @@ defmodule Bureaucrat.MacrosTest do
 
       error = assert_raise RuntimeError, fn -> Code.eval_quoted(ast) end
 
-      assert error.message =~ "It looks like you called a `Phoenix.ConnTest` macro inside `foo`."
+      assert error.message =~ "It looks like you called a `Phoenix.ConnTest` macro inside `private_caller`."
     end
   end
 end
