@@ -156,8 +156,7 @@ defmodule Bureaucrat.Helpers do
   def get_default_operation_id(%Plug.Conn{private: private}) do
     case private do
       %{phoenix_controller: elixir_controller, phoenix_action: action} ->
-        controller = elixir_controller |> to_string() |> String.trim("Elixir.")
-        "#{controller}.#{action}"
+        "#{inspect(elixir_controller)}.#{action}"
 
       _ ->
         raise """
