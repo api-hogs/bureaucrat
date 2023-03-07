@@ -133,6 +133,16 @@ defmodule Bureaucrat.Helpers do
 
   def format_test_name("test " <> name), do: name
 
+  def format_test_name(function_name) do
+    raise """
+    It looks like you called a `Phoenix.ConnTest` macro inside `#{function_name}`.
+    Bureaucrat can only document macros `get`, `post`, `delete`, etc. when they are called inside a `test` block.
+
+    If the request macro is called inside a private function or setup, you should explicitly say you don't want Bureaucrat to document this request.
+    Use `get_undocumented`, `post_undocumented`, `delete_undocumented`, `patch_undocumented` or `put_undocumented` instead.
+    """
+  end
+
   def group_title_for(_mod, []), do: nil
 
   def group_title_for(mod, [{other, path} | paths]) do
@@ -144,10 +154,17 @@ defmodule Bureaucrat.Helpers do
   end
 
   def get_default_operation_id(%Plug.Conn{private: private}) do
-    %{phoenix_controller: elixir_controller, phoenix_action: action} = private
-    controller = elixir_controller |> to_string() |> String.trim("Elixir.")
+    case private do
+      %{phoenix_controller: elixir_controller, phoenix_action: action} ->
+        "#{inspect(elixir_controller)}.#{action}"
 
-    "#{controller}.#{action}"
+      _ ->
+        raise """
+        Bureaucrat couldn't find a controller and/or action for this request.
+        Possibly, the request is halted by a plug before it gets to the controller.
+        Please use `get_undocumented` or `post_undocumented` (etc.) instead.
+        """
+    end
   end
 
   def get_default_operation_id(%Message{topic: topic, event: event}) do
