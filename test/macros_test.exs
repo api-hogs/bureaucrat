@@ -131,4 +131,12 @@ defmodule Bureaucrat.MacrosTest do
       assert error.message =~ "It looks like you called a `Phoenix.ConnTest` macro inside `private_caller`."
     end
   end
+
+  describe "description" do
+    test "is generated from a test description", context do
+      get(context.conn, "/hello")
+      [conn] = Recorder.get_records()
+      assert conn.assigns.bureaucrat_desc == "description is generated from a test description"
+    end
+  end
 end
