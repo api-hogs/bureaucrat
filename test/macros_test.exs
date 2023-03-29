@@ -107,7 +107,7 @@ defmodule Bureaucrat.MacrosTest do
     test "is generated when the request is made from another function", context do
       hello_request(context.conn)
       [conn] = Recorder.get_records()
-      assert conn.assigns.bureaucrat_desc == nil
+      assert conn.assigns.bureaucrat_desc == "description is generated when the request is made from another function"
     end
 
     defp hello_request(conn), do: get(conn, "/hello")

@@ -125,10 +125,26 @@ defmodule Bureaucrat.Helpers do
       opts =
         opts
         |> Keyword.put_new(:operation_id, default_operation_id)
+        |> Keyword.update!(:description, &(&1 || default_description()))
 
       Bureaucrat.Recorder.doc(conn, opts)
       conn
     end
+  end
+
+  def default_description do
+    {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
+
+    Enum.find_value(
+      stacktrace,
+      fn {module, function, _arity, opts} ->
+        with "test " <> description <- to_string(function),
+             true <- String.ends_with?(to_string(module), "Test"),
+             true <- String.ends_with?(to_string(Keyword.get(opts, :file)), ".exs"),
+             do: description,
+             else: (_ -> nil)
+      end
+    )
   end
 
   def format_test_name("test " <> name), do: name
