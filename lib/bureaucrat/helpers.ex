@@ -153,8 +153,13 @@ defmodule Bureaucrat.Helpers do
   end
 
   def default_description do
-    # We look for the first test process in the stack traces of this process as well as other callers.
-    # The latter allows us to find the test description even if this function is running in a task started by a test process.
+    # The default description is taken from the test which invoked this code (if such test exists).
+    # We'll first look into the call stack of this process. If we can't find a test function, we'll
+    # look at the $callers process dictionary entry, which contains the pids of caller processes.
+    # This allows us to find the owner test even if this function is running in a separate task
+    # process. See https://hexdocs.pm/elixir/Task.html#module-ancestor-and-caller-tracking for
+    # details.
+
     callers = Process.get(:"$callers") || []
     Enum.find_value([self() | callers], &test_description/1)
   end
