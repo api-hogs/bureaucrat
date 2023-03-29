@@ -127,7 +127,27 @@ defmodule Bureaucrat.Helpers do
         |> Keyword.put_new(:operation_id, default_operation_id)
         |> Keyword.update!(:description, &(&1 || default_description()))
 
-      Bureaucrat.Recorder.doc(conn, opts)
+      if Keyword.fetch!(opts, :description) != nil do
+        Bureaucrat.Recorder.doc(conn, opts)
+      else
+        file = Keyword.fetch!(opts, :file)
+        line = Keyword.fetch!(opts, :line)
+
+        Mix.shell().info("""
+        The request at #{file}:#{line} won't be recorded by bureaucrat because
+        the description can't be determined and none is explicitly provided.
+        To address this, you can pass the :description option to this macro.
+
+        If this macro is invoked indirectly, via the request macros, such as
+        get and post, you can switch to the _undocumented version to
+        explicitly avoid generating the documentation.
+
+        Alternatively, you can provide the description manually with something
+        like doc(conn, description: "some description"), where conn is the result
+        of the _undocumented macro.
+        """)
+      end
+
       conn
     end
   end

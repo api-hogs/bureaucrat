@@ -128,24 +128,30 @@ defmodule Bureaucrat.MacrosTest do
       assert conn.assigns.bureaucrat_desc == "custom description"
     end
 
-    test "is not auto-generated if the test is not in a call stack", context do
-      test_pid = self()
-
-      spawn(fn ->
-        hello_request(context.conn)
-        [conn] = Recorder.get_records()
-        send(test_pid, {:description, conn.assigns.bureaucrat_desc})
-      end)
-
-      assert_receive {:description, description}
-      assert description == nil
-    end
-
     defp hello_request(conn, opts \\ []) do
       case Keyword.fetch(opts, :description) do
         :error -> get(conn, "/hello")
         {:ok, description} -> conn |> get_undocumented("/hello") |> doc(description: description)
       end
     end
+  end
+
+  test "request is not recorded if the test is not in a call stack", context do
+    test_pid = self()
+
+    captured_io =
+      ExUnit.CaptureIO.capture_io(fn ->
+        spawn(fn ->
+          hello_request(context.conn)
+
+          records = Recorder.get_records()
+          send(test_pid, {:recorded, records})
+        end)
+
+        assert_receive {:recorded, records}
+        assert records == []
+      end)
+
+    assert captured_io =~ ~r/The request.*won't be recorded/
   end
 end
