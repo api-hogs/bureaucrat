@@ -110,6 +110,18 @@ defmodule Bureaucrat.MacrosTest do
       assert conn.assigns.bureaucrat_desc == "description is generated when the request is made from another function"
     end
 
+    test "is generated when the request is made from another task", context do
+      description =
+        Task.async(fn ->
+          hello_request(context.conn)
+          [conn] = Recorder.get_records()
+          conn.assigns.bureaucrat_desc
+        end)
+        |> Task.await()
+
+      assert description == "description is generated when the request is made from another task"
+    end
+
     test "is not auto-generated when one is provided", context do
       hello_request(context.conn, description: "custom description")
       [conn] = Recorder.get_records()

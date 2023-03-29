@@ -133,7 +133,14 @@ defmodule Bureaucrat.Helpers do
   end
 
   def default_description do
-    {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
+    # We look for the first test process in the stack traces of this process as well as other callers.
+    # The latter allows us to find the test description even if this function is running in a task started by a test process.
+    callers = Process.get(:"$callers") || []
+    Enum.find_value([self() | callers], &test_description/1)
+  end
+
+  defp test_description(pid) do
+    {:current_stacktrace, stacktrace} = Process.info(pid, :current_stacktrace)
 
     Enum.find_value(
       stacktrace,
