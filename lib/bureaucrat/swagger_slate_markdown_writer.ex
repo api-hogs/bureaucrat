@@ -390,10 +390,24 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
     end
 
     # Response body
-    file
-    |> puts("```json")
-    |> puts("#{format_resp_body(record.resp_body)}")
-    |> puts("```\n")
+    case Enum.find_value(record.resp_headers, fn header ->
+      header = Tuple.to_list(header)
+      header |> List.first() == "content-type" &&
+      header |> List.last() =~ ~r/text\/html(;.*)?\z/
+    end) do
+      nil ->
+        # If the response body is not HTML, format it as JSON file
+        file
+        |> puts("```json")
+        |> puts("#{format_resp_body(record.resp_body)}")
+        |> puts("```\n")
+      _ ->
+        # Assume body is HTML
+        file
+        |> puts("```html")
+        |> puts(record.resp_body)
+        |> puts("```\n")
+    end
   end
 
   @doc """
