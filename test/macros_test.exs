@@ -97,38 +97,61 @@ defmodule Bureaucrat.MacrosTest do
     end
   end
 
-  # We want to raise an error when Phoenix.ConnTest macros are called outside a `test` block.
-  # This test mimics a userland test that calls Phoenix.ConnTest.{get, post, put, delete}
-  # and asserts that a RuntimeError is raised when compiling the code.
-  # This is counterintuitive, but remember that some of Bureaucrat's runtime is during test compilation.
-  for method <- [:get, :post, :put, :delete] do
-    @method method
-    test "Raises runtime error with message when calling #{@method} outside a `test` block" do
-      module_name = :"RuntimeErrorTest#{@method |> Atom.to_string() |> Macro.camelize()}"
-
-      ast =
-        quote do
-          defmodule unquote(module_name) do
-            use ExUnit.Case, async: false
-            import Phoenix.ConnTest, only: :functions
-            import Bureaucrat.Helpers
-            import Bureaucrat.Macros
-
-            @endpoint false
-
-            test "won't compile because it calls Phoenix.ConnTest.#{unquote(@method)} in private function" do
-              private_caller()
-            end
-
-            defp private_caller() do
-              unquote(@method)(:fake_conn, "/hello", %{foo: "bar"})
-            end
-          end
-        end
-
-      error = assert_raise RuntimeError, fn -> Code.eval_quoted(ast) end
-
-      assert error.message =~ "It looks like you called a `Phoenix.ConnTest` macro inside `private_caller`."
+  describe "description" do
+    test "is generated from a test description", context do
+      get(context.conn, "/hello")
+      [conn] = Recorder.get_records()
+      assert conn.assigns.bureaucrat_desc == "description is generated from a test description"
     end
+
+    test "is generated when the request is made from another function", context do
+      hello_request(context.conn)
+      [conn] = Recorder.get_records()
+      assert conn.assigns.bureaucrat_desc == "description is generated when the request is made from another function"
+    end
+
+    test "is generated when the request is made from another task", context do
+      description =
+        Task.async(fn ->
+          hello_request(context.conn)
+          [conn] = Recorder.get_records()
+          conn.assigns.bureaucrat_desc
+        end)
+        |> Task.await()
+
+      assert description == "description is generated when the request is made from another task"
+    end
+
+    test "is not auto-generated when one is provided", context do
+      hello_request(context.conn, description: "custom description")
+      [conn] = Recorder.get_records()
+      assert conn.assigns.bureaucrat_desc == "custom description"
+    end
+
+    defp hello_request(conn, opts \\ []) do
+      case Keyword.fetch(opts, :description) do
+        :error -> get(conn, "/hello")
+        {:ok, description} -> conn |> get_undocumented("/hello") |> doc(description: description)
+      end
+    end
+  end
+
+  test "request is not recorded if the test is not in a call stack", context do
+    test_pid = self()
+
+    captured_io =
+      ExUnit.CaptureIO.capture_io(fn ->
+        spawn(fn ->
+          hello_request(context.conn)
+
+          records = Recorder.get_records()
+          send(test_pid, {:recorded, records})
+        end)
+
+        assert_receive {:recorded, records}
+        assert records == []
+      end)
+
+    assert captured_io =~ ~r/The request.*won't be recorded/
   end
 end

@@ -125,23 +125,62 @@ defmodule Bureaucrat.Helpers do
       opts =
         opts
         |> Keyword.put_new(:operation_id, default_operation_id)
+        |> Keyword.update!(:description, &(&1 || default_description()))
 
-      Bureaucrat.Recorder.doc(conn, opts)
+      if Keyword.fetch!(opts, :description) != nil do
+        Bureaucrat.Recorder.doc(conn, opts)
+      else
+        file = Keyword.fetch!(opts, :file)
+        line = Keyword.fetch!(opts, :line)
+
+        Mix.shell().info("""
+        The request at #{file}:#{line} won't be recorded by bureaucrat because
+        the description can't be determined and none is explicitly provided.
+        To address this, you can pass the :description option to this macro.
+
+        If this macro is invoked indirectly, via the request macros, such as
+        get and post, you can switch to the _undocumented version to
+        explicitly avoid generating the documentation.
+
+        Alternatively, you can provide the description manually with something
+        like doc(conn, description: "some description"), where conn is the result
+        of the _undocumented macro.
+        """)
+      end
+
       conn
     end
   end
 
-  def format_test_name("test " <> name), do: name
+  def default_description do
+    # The default description is taken from the test which invoked this code (if such test exists).
+    # We'll first look into the call stack of this process. If we can't find a test function, we'll
+    # look at the $callers process dictionary entry, which contains the pids of caller processes.
+    # This allows us to find the owner test even if this function is running in a separate task
+    # process. See https://hexdocs.pm/elixir/Task.html#module-ancestor-and-caller-tracking for
+    # details.
 
-  def format_test_name(function_name) do
-    raise """
-    It looks like you called a `Phoenix.ConnTest` macro inside `#{function_name}`.
-    Bureaucrat can only document macros `get`, `post`, `delete`, etc. when they are called inside a `test` block.
-
-    If the request macro is called inside a private function or setup, you should explicitly say you don't want Bureaucrat to document this request.
-    Use `get_undocumented`, `post_undocumented`, `delete_undocumented`, `patch_undocumented` or `put_undocumented` instead.
-    """
+    callers = Process.get(:"$callers") || []
+    Enum.find_value([self() | callers], &test_description/1)
   end
+
+  defp test_description(pid) do
+    {:current_stacktrace, stacktrace} = Process.info(pid, :current_stacktrace)
+
+    Enum.find_value(
+      stacktrace,
+      fn {module, function, _arity, opts} ->
+        with "test " <> description <- to_string(function),
+             true <- String.ends_with?(to_string(module), "Test"),
+             true <- String.ends_with?(to_string(Keyword.get(opts, :file)), ".exs"),
+             do: description,
+             else: (_ -> nil)
+      end
+    )
+  end
+
+  def format_test_name("test " <> name), do: name
+  def format_test_name(_other), do: nil
 
   def group_title_for(_mod, []), do: nil
 
