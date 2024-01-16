@@ -140,19 +140,23 @@ defmodule Bureaucrat.SwaggerSlateMarkdownWriter do
   prefix is output before each property name to enable nested objects to be flattened.
   """
   def write_model_properties(file, swagger, model_schema, prefix \\ "") do
-    {objects, primitives} =
-      model_schema["properties"]
-      |> Enum.split_with(fn {_key, schema} -> schema["type"] == "object" end)
+    case Map.get(model_schema, "properties") do
+      nil -> file
+      properties ->
+        {objects, primitives} =
+          properties
+          |> Enum.split_with(fn {_key, schema} -> schema["type"] == "object" end)
 
-    ordered = Enum.concat(primitives, objects)
+      ordered = Enum.concat(primitives, objects)
 
-    Enum.each(ordered, fn {property, property_details} ->
-      {property_details, type} = resolve_type(swagger, property_details)
-      required? = is_required(property, model_schema)
-      write_model_property(file, swagger, "#{prefix}#{property}", property_details, type, required?)
-    end)
+      Enum.each(ordered, fn {property, property_details} ->
+        {property_details, type} = resolve_type(swagger, property_details)
+        required? = is_required(property, model_schema)
+        write_model_property(file, swagger, "#{prefix}#{property}", property_details, type, required?)
+      end)
 
-    file
+      file
+    end
   end
 
   def resolve_type(swagger, %{"$ref" => schema_ref}) do
