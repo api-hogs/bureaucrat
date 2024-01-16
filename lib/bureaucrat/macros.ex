@@ -48,7 +48,7 @@ defmodule Bureaucrat.Macros do
           )
 
         accept_header = conn |> Plug.Conn.get_req_header("accept") |> List.first() || ""
-        content_header = conn |> Plug.Conn.get_resp_header("content-type") |> List.first() || ""
+        content_header = conn |> Plug.Conn.get_req_header("content-type") |> List.first() || ""
         is_json = Enum.any?([accept_header, content_header], &String.contains?(&1, "json"))
 
         if is_json do
