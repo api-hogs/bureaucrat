@@ -26,6 +26,12 @@ defmodule Bureaucrat.PostmanWriter do
         records
         |> group_records()
         |> Enum.map(fn {controller, actions} ->
+          content_type =
+            records
+            |> List.first()
+            |> Map.get(:req_headers)
+            |> Enum.find_value(fn {header, value} -> if header == "content-type", do: value end)
+
           %{
             name: controller_name(controller),
             item:
@@ -34,7 +40,7 @@ defmodule Bureaucrat.PostmanWriter do
                   name: records |> List.first() |> build_path(),
                   request: %{
                     auth: build_auth(records),
-                    body: build_req_body(records),
+                    body: build_req_body(records, content_type),
                     header: records |> Enum.map(& &1.req_headers) |> build_key_value(),
                     method: records |> List.first() |> Map.get(:method),
                     url: build_url(records)
@@ -48,7 +54,7 @@ defmodule Bureaucrat.PostmanWriter do
                         name: build_description(record),
                         originalRequest: %{
                           auth: build_auth([record]),
-                          body: build_req_body([record]),
+                          body: build_req_body([record], content_type),
                           header: build_key_value([record.req_headers]),
                           method: record.method,
                           url: build_url([record])
@@ -116,12 +122,27 @@ defmodule Bureaucrat.PostmanWriter do
     end)
   end
 
-  defp build_req_body(records) do
+  defp build_req_body(records, "application/json") do
+    %{
+      mode: "raw",
+      raw: records |> Enum.map(& &1.body_params) |> strip__json_key() |> JSON.encode!(),
+      options: %{
+        raw: %{
+          language: "json"
+        }
+      }
+    }
+  end
+
+  defp build_req_body(records, _) do
     %{
       mode: "formdata",
       formdata: records |> Enum.map(& &1.body_params) |> build_key_value()
     }
   end
+
+  defp strip__json_key([%{"_json" => params}]), do: params |> strip__json_key()
+  defp strip__json_key(params), do: params
 
   defp build_auth(records) do
     has_bearer =
@@ -138,9 +159,13 @@ defmodule Bureaucrat.PostmanWriter do
     end
   end
 
+  defp build_key_value([%{"_json" => list}]), do: list |> build_key_value()
+
   defp build_key_value([first | _] = lists) when is_list(first) do
     lists |> Enum.map(&Map.new/1) |> build_key_value()
   end
+
+  defp build_key_value([]), do: []
 
   defp build_key_value([first | _] = maps) when is_map(first) do
     all_keys = maps |> Enum.flat_map(fn map -> Map.keys(map) end) |> Enum.uniq()
