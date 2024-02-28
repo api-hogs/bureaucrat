@@ -95,7 +95,7 @@ defmodule Bureaucrat.PostmanWriterTest do
                  %{
                    "id" => "123",
                    "type" => "a_type"
-                 },
+                 }
                ]
     end
 
@@ -109,6 +109,28 @@ defmodule Bureaucrat.PostmanWriterTest do
         |> Map.replace!(:req_headers, [{"content-type", "application/json"}])
 
       PostmanWriter.write([record], filename)
+      json = filename |> File.read!() |> JSON.decode!()
+
+      assert get_in(json, ["item", Access.at(0), "item", Access.at(0), "request", "body", "raw"]) |> JSON.decode!() ==
+               []
+    end
+
+    test "only writes first record when multiple", %{record: record} do
+      filename = "test/output/foo_bar.json"
+
+      record =
+        Map.replace!(record, :body_params, %{
+          "_json" => []
+        })
+        |> Map.replace!(:req_headers, [{"content-type", "application/json"}])
+
+      record2 =
+        Map.replace!(record, :body_params, %{
+          "_json" => ["item"]
+        })
+        |> Map.replace!(:req_headers, [{"content-type", "application/json"}])
+
+      PostmanWriter.write([record, record2], filename)
       json = filename |> File.read!() |> JSON.decode!()
 
       assert get_in(json, ["item", Access.at(0), "item", Access.at(0), "request", "body", "raw"]) |> JSON.decode!() ==

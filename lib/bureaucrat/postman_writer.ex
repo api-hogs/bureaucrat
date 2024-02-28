@@ -122,10 +122,11 @@ defmodule Bureaucrat.PostmanWriter do
     end)
   end
 
-  defp build_req_body(records, "application/json") do
+  # Postman only supports one example record. Take the first one and disregard the rest
+  defp build_req_body([first_record | _rest], "application/json") do
     %{
       mode: "raw",
-      raw: records |> Enum.map(& &1.body_params) |> strip__json_key() |> JSON.encode!(),
+      raw: first_record.body_params |> strip__json_key() |> JSON.encode!(),
       options: %{
         raw: %{
           language: "json"
@@ -141,7 +142,7 @@ defmodule Bureaucrat.PostmanWriter do
     }
   end
 
-  defp strip__json_key([%{"_json" => params}]), do: params |> strip__json_key()
+  defp strip__json_key(%{"_json" => params}), do: params |> strip__json_key()
   defp strip__json_key(params), do: params
 
   defp build_auth(records) do
