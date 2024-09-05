@@ -232,7 +232,7 @@ defmodule Bureaucrat.MarkdownWriter do
   defp to_anchor(name) do
     name
     |> String.downcase()
-    |> String.replace(~r/\W+/, "-")
+    |> String.replace(~r/\W+/u, "-")
     |> String.replace_leading("-", "")
     |> String.replace_trailing("-", "")
   end
