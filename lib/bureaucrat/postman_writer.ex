@@ -43,7 +43,8 @@ defmodule Bureaucrat.PostmanWriter do
                     body: build_req_body(records, content_type),
                     header: records |> Enum.map(& &1.req_headers) |> build_key_value(),
                     method: records |> List.first() |> Map.get(:method),
-                    url: build_url(records)
+                    url: build_url(records),
+                    description: records |> List.first() |> Map.get(:assigns) |> Map.get(:bureaucrat_opts) |> Keyword.get(:detail, "/")
                   },
                   response:
                     Enum.map(records, fn record ->
