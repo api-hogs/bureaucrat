@@ -155,11 +155,17 @@ defmodule Bureaucrat.PostmanWriter do
       end)
 
     if has_bearer do
-      %{type: "bearer", bearer: [%{key: "token", value: "{{token}}"}]}
+      Application.get_env(:bureaucrat, :bearer_name)
+      |> generate_bearer()
+
+      #      %{type: "bearer", bearer: [%{key: "token", value: "{{token}}"}]}
     else
       %{type: "noauth"}
     end
   end
+
+  defp generate_bearer(nil), do: %{type: "bearer", bearer: [%{key: "token", value: "{{token}}"}]}
+  defp generate_bearer(value), do: %{type: value, bearer: [%{key: "token", value: "{{token}}"}]}
 
   defp build_key_value([%{"_json" => list}]), do: list |> build_key_value()
 
