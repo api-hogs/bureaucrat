@@ -136,6 +136,17 @@ defmodule Bureaucrat.PostmanWriter do
     }
   end
 
+  defp build_req_body([first_record | _rest], "application/vnd.api+json") do
+    %{
+      mode: "raw",
+      raw: first_record.body_params |> strip__json_key() |> JSON.encode!(),
+      options: %{
+        raw: %{
+          language: "json"
+        }
+      }
+    }
+  end
   defp build_req_body(records, _) do
     %{
       mode: "formdata",
